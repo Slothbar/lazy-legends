@@ -19,10 +19,10 @@ const auth = new google.auth.GoogleAuth({
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '1SizgE0qHuB1JgTpOpifEdeJ_ABQEVaESHeFIdPGWeAQ';
 
 // X API setup
-const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN || 'your-x-bearer-token-here'; // Add this in Render later
+const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN || 'AAAAAAAAAAAAAAAAAAAAAJU40QEAAAAAnzAU1MPdLKv1dELKpirSCL2zx/A=iK6tDjU8DCuPnafaJeaIKWwbZ2Sr9htA0on7fQC6yADUZuz20U'; // Add this in Render later
 
 // Function to append data to Google Sheet
 async function appendToGoogleSheet(xUsername, hederaWallet) {
@@ -76,7 +76,7 @@ async function trackLazyLegendsPosts() {
             for (const row of rows) {
                 try {
                     const response = await axios.get('https://api.twitter.com/2/tweets/search/recent', {
-                        headers: { Authorization: `Bearer ${AAAAAAAAAAAAAAAAAAAAAJU40QEAAAAA5%2B0SorAU%2F36SqcCwwqXdknB%2Bijk%3Dw9yZQkyr7mhcV4gcdt1qAX8o1VmGEqGJvbUW7JtBVReLnaPT27}` },
+                        headers: { Authorization: `Bearer ${AAAAAAAAAAAAAAAAAAAAAJU40QEAAAAAnzAU1MPdLKv1dELKpirSCL2zx/A=iK6tDjU8DCuPnafaJeaIKWwbZ2Sr9htA0on7fQC6yADUZuz20U}` },
                         params: {
                             query: `#LazyLegends from:${row.xUsername}`,
                             max_results: 10,
