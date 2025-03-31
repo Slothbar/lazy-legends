@@ -78,7 +78,7 @@ async function trackLazyLegendsPosts() {
                     const response = await axios.get('https://api.twitter.com/2/tweets/search/recent', {
                         headers: { Authorization: `Bearer ${X_BEARER_TOKEN}` },
                         params: {
-                            query: `#LazyLegends from:${row.xUsername}`,
+                            query: `#LazyLegends from:${row.xUsername.replace('@', '')}`,
                             max_results: 10,
                             'tweet.fields': 'created_at'
                         }
