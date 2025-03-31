@@ -131,4 +131,87 @@ button {
 }
 
 button:hover {
-    background: linear-gradient(90deg, #6
+    background: linear-gradient(90deg, #6b9e78, #8ab89a);
+    transform: scale(1.05);
+}
+
+#how-to-play-section ol {
+    text-align: left;
+    max-width: 600px;
+    margin: 20px auto;
+    list-style: decimal inside;
+}
+
+#how-to-play-section li {
+    margin-bottom: 15px;
+    font-size: 1em;
+}
+
+#how-to-play-section strong {
+    color: #4a7c59;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 1em;
+}
+
+th, td {
+    padding: 15px;
+    text-align: center;
+}
+
+th {
+    background: linear-gradient(90deg, #a8d5ba, #8ab89a);
+    color: #fff;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+td {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.8);
+    transition: background 0.3s ease;
+}
+
+tr:hover td {
+    background: rgba(240, 248, 230, 0.9);
+}
+
+footer {
+    margin-top: 30px;
+    font-size: 0.9em;
+    color: #666;
+    text-align: center;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+    h1 {
+        font-size: 2em;
+    }
+    h2 {
+        font-size: 1.5em;
+    }
+    input, button {
+        font-size: 0.9em;
+    }
+    #profile-section .x-logo {
+        width: 30px;
+        height: 30px;
+    }
+    #profile-section .profile-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
