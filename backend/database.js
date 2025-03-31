@@ -1,5 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database(':memory:'); // Use in-memory DB for simplicity; replace with a file for persistence
+const db = new sqlite3.Database('/app/data/lazy-legends.db'); // Save to a file on Render's disk
 
 db.serialize(() => {
     db.run(`
