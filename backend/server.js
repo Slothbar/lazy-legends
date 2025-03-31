@@ -88,10 +88,10 @@ async function trackLazyLegendsPosts() {
                     const newTweets = tweets.filter(tweet => {
                         const tweetTime = new Date(tweet.created_at).getTime();
                         const now = Date.now();
-                        return (now - tweetTime) < 60000; // Only count tweets from the last minute
+                        return (now - tweetTime) < 60000;
                     });
 
-                    const pointsToAdd = newTweets.length * 2; // 2 points per tweet
+                    const pointsToAdd = newTweets.length * 2;
                     if (pointsToAdd > 0) {
                         db.run(
                             `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE xUsername = ?`,
@@ -104,10 +104,15 @@ async function trackLazyLegendsPosts() {
                     }
                 } catch (error) {
                     console.error(`Error fetching tweets for ${row.xUsername}:`, error.response?.data || error.message);
+                    if (error.response?.status === 429) {
+                        console.log('Hit 429 limit, waiting 15 seconds...');
+                        await new Promise(resolve => setTimeout(resolve, 15000)); // Wait 15 seconds
+                    }
                 }
+                await new Promise(resolve => setTimeout(resolve, 1000)); // 1-second delay between users
             }
         });
-    }, 60000); // Check every minute
+    }, 60000);
 }
 
 // Start server and tracking
