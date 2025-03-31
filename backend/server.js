@@ -19,13 +19,15 @@ const auth = new google.auth.GoogleAuth({
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '1SizgE0qHuB1JgTpOpifEdeJ_ABQEVaESHeFIdPGWeAQ'; // Use env variable on Render
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
+
+// X API setup
+const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN || 'your-x-bearer-token-here'; // Add this in Render later
 
 // Function to append data to Google Sheet
 async function appendToGoogleSheet(xUsername, hederaWallet) {
     const timestamp = new Date().toISOString();
     const values = [[xUsername, hederaWallet, timestamp]];
-
     try {
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
@@ -47,9 +49,7 @@ app.post('/api/profile', (req, res) => {
         [xUsername, hederaWallet, hederaWallet],
         async (err) => {
             if (err) return res.status(500).json({ error: 'Database error' });
-            
             await appendToGoogleSheet(xUsername, hederaWallet);
-            
             res.status(200).json({ message: 'Profile saved' });
         }
     );
@@ -67,30 +67,51 @@ app.get('/api/leaderboard', (req, res) => {
     );
 });
 
-// Simulate X #LazyLegends tracking (replace with real X API integration)
+// Track #LazyLegends posts on X
 async function trackLazyLegendsPosts() {
     setInterval(async () => {
-        db.all(`SELECT xUsername FROM users`, [], (err, rows) => {
+        db.all(`SELECT xUsername FROM users`, [], async (err, rows) => {
             if (err) return console.error(err);
-            rows.forEach((row) => {
-                const pointsToAdd = Math.random() > 0.5 ? 2 : 0;
-                if (pointsToAdd > 0) {
-                    db.run(
-                        `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE xUsername = ?`,
-                        [pointsToAdd, row.xUsername],
-                        (err) => {
-                            if (err) console.error(err);
-                            console.log(`${row.xUsername} earned ${pointsToAdd} SloMo Points`);
+
+            for (const row of rows) {
+                try {
+                    const response = await axios.get('https://api.twitter.com/2/tweets/search/recent', {
+                        headers: { Authorization: `Bearer ${AAAAAAAAAAAAAAAAAAAAAJU40QEAAAAA5%2B0SorAU%2F36SqcCwwqXdknB%2Bijk%3Dw9yZQkyr7mhcV4gcdt1qAX8o1VmGEqGJvbUW7JtBVReLnaPT27}` },
+                        params: {
+                            query: `#LazyLegends from:${row.xUsername}`,
+                            max_results: 10,
+                            'tweet.fields': 'created_at'
                         }
-                    );
+                    });
+
+                    const tweets = response.data.data || [];
+                    const newTweets = tweets.filter(tweet => {
+                        const tweetTime = new Date(tweet.created_at).getTime();
+                        const now = Date.now();
+                        return (now - tweetTime) < 60000; // Only count tweets from the last minute
+                    });
+
+                    const pointsToAdd = newTweets.length * 2; // 2 points per tweet
+                    if (pointsToAdd > 0) {
+                        db.run(
+                            `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE xUsername = ?`,
+                            [pointsToAdd, row.xUsername],
+                            (err) => {
+                                if (err) console.error(err);
+                                console.log(`${row.xUsername} earned ${pointsToAdd} SloMo Points`);
+                            }
+                        );
+                    }
+                } catch (error) {
+                    console.error(`Error fetching tweets for ${row.xUsername}:`, error.response?.data || error.message);
                 }
-            });
+            }
         });
     }, 60000); // Check every minute
 }
 
 // Start server and tracking
-const PORT = process.env.PORT || 3000; // Use Render's PORT
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     trackLazyLegendsPosts();
