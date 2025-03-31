@@ -22,7 +22,7 @@ const sheets = google.sheets({ version: 'v4', auth });
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '1SizgE0qHuB1JgTpOpifEdeJ_ABQEVaESHeFIdPGWeAQ';
 
 // X API setup
-const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN || 'AAAAAAAAAAAAAAAAAAAAAJU40QEAAAAAnzAU1MPdLKv1dELKpirSCL2zx/A=iK6tDjU8DCuPnafaJeaIKWwbZ2Sr9htA0on7fQC6yADUZuz20U'; // Add this in Render later
+const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN || 'X_BEARER_TOKEN'; // Add this in Render later
 
 // Function to append data to Google Sheet
 async function appendToGoogleSheet(xUsername, hederaWallet) {
@@ -76,7 +76,7 @@ async function trackLazyLegendsPosts() {
             for (const row of rows) {
                 try {
                     const response = await axios.get('https://api.twitter.com/2/tweets/search/recent', {
-                        headers: { Authorization: `Bearer ${AAAAAAAAAAAAAAAAAAAAAJU40QEAAAAAnzAU1MPdLKv1dELKpirSCL2zx/A=iK6tDjU8DCuPnafaJeaIKWwbZ2Sr9htA0on7fQC6yADUZuz20U}` },
+                        headers: { Authorization: `Bearer ${X_BEARER_TOKEN}` },
                         params: {
                             query: `#LazyLegends from:${row.xUsername}`,
                             max_results: 10,
