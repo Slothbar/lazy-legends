@@ -9,22 +9,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve static frontend files
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Google Sheets API setup
 const auth = new google.auth.GoogleAuth({
     keyFile: './lazy-legends-credentials.json',
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '1SizgE0qHuB1JgTpOpifEdeJ_ABQEVaESHeFIdPGWeAQ';
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
 
-// X API setup
-const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN || 'X_BEARER_TOKEN'; // Add this in Render later
+const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
-// Function to append data to Google Sheet
+const lastChecked = {}; // Track last check time per user
+
 async function appendToGoogleSheet(xUsername, hederaWallet) {
     const timestamp = new Date().toISOString();
     const values = [[xUsername, hederaWallet, timestamp]];
@@ -41,7 +39,6 @@ async function appendToGoogleSheet(xUsername, hederaWallet) {
     }
 }
 
-// Save or update user profile and append to Google Sheet
 app.post('/api/profile', (req, res) => {
     const { xUsername, hederaWallet } = req.body;
     db.run(
@@ -55,7 +52,6 @@ app.post('/api/profile', (req, res) => {
     );
 });
 
-// Get leaderboard
 app.get('/api/leaderboard', (req, res) => {
     db.all(
         `SELECT xUsername, sloMoPoints FROM users ORDER BY sloMoPoints DESC LIMIT 10`,
@@ -67,13 +63,20 @@ app.get('/api/leaderboard', (req, res) => {
     );
 });
 
-// Track #LazyLegends posts on X
 async function trackLazyLegendsPosts() {
     setInterval(async () => {
+        console.log('Checking for #LazyLegends posts now...');
         db.all(`SELECT xUsername FROM users`, [], async (err, rows) => {
             if (err) return console.error(err);
 
             for (const row of rows) {
+                const lastTime = lastChecked[row.xUsername] || 0;
+                const now = Date.now();
+                if (now - lastTime < 900000) { // Skip if checked in last 15 minutes
+                    console.log(`Skipping ${row.xUsername} - checked recently`);
+                    continue;
+                }
+
                 try {
                     const response = await axios.get('https://api.twitter.com/2/tweets/search/recent', {
                         headers: { Authorization: `Bearer ${X_BEARER_TOKEN}` },
@@ -87,8 +90,7 @@ async function trackLazyLegendsPosts() {
                     const tweets = response.data.data || [];
                     const newTweets = tweets.filter(tweet => {
                         const tweetTime = new Date(tweet.created_at).getTime();
-                        const now = Date.now();
-                        return (now - tweetTime) < 300000; // Last 5 minutes
+                        return tweetTime > lastTime; // Only new tweets
                     });
 
                     const pointsToAdd = newTweets.length * 2;
@@ -102,20 +104,20 @@ async function trackLazyLegendsPosts() {
                             }
                         );
                     }
+                    lastChecked[row.xUsername] = now; // Update last checked time
                 } catch (error) {
                     console.error(`Error fetching tweets for ${row.xUsername}:`, error.response?.data || error.message);
                     if (error.response?.status === 429) {
-                        console.log('Hit 429 limit, waiting 15 seconds...');
-                        await new Promise(resolve => setTimeout(resolve, 15000));
+                        console.log('Hit 429 limit, waiting 60 seconds...');
+                        await new Promise(resolve => setTimeout(resolve, 60000)); // Wait 1 minute
                     }
                 }
-                await new Promise(resolve => setTimeout(resolve, 5000)); // 5-second delay
+                await new Promise(resolve => setTimeout(resolve, 10000)); // 10-second delay between users
             }
         });
-    }, 300000); // 5-minute interval
+    }, 900000); // 15-minute interval
 }
 
-// Start server and tracking
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
