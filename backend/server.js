@@ -88,7 +88,7 @@ async function trackLazyLegendsPosts() {
                     const newTweets = tweets.filter(tweet => {
                         const tweetTime = new Date(tweet.created_at).getTime();
                         const now = Date.now();
-                        return (now - tweetTime) < 60000;
+                        return (now - tweetTime) < 300000; // Last 5 minutes
                     });
 
                     const pointsToAdd = newTweets.length * 2;
@@ -106,13 +106,13 @@ async function trackLazyLegendsPosts() {
                     console.error(`Error fetching tweets for ${row.xUsername}:`, error.response?.data || error.message);
                     if (error.response?.status === 429) {
                         console.log('Hit 429 limit, waiting 15 seconds...');
-                        await new Promise(resolve => setTimeout(resolve, 15000)); // Wait 15 seconds
+                        await new Promise(resolve => setTimeout(resolve, 15000));
                     }
                 }
-                await new Promise(resolve => setTimeout(resolve, 1000)); // 1-second delay between users
+                await new Promise(resolve => setTimeout(resolve, 5000)); // 5-second delay
             }
         });
-    }, 60000);
+    }, 300000); // 5-minute interval
 }
 
 // Start server and tracking
