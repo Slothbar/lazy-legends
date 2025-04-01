@@ -11,6 +11,5 @@
         "cors": "^2.8.5",
         "axios": "^1.6.8",
         "googleapis": "^137.1.0",
-        "@hashgraph/hashconnect": "^0.11.0"
     }
 }
