@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const { google } = require('googleapis');
+const { HashConnect } = require('@hashgraph/hashconnect');
 const db = require('./database.js');
 const path = require('path');
 
@@ -22,6 +23,44 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
 const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
 const lastChecked = {};
+
+// HashConnect Setup
+const hashconnect = new HashConnect(true);
+let appMetadata = {
+    name: "Lazy Legends",
+    description: "A Chill2Earn game on Hedera",
+    icon: "https://i.ibb.co/7W8z8Qz/sloth-icon.png",
+    url: "https://lazylegendscoin.com"
+};
+
+let saveData = {};
+
+const initHashConnect = async () => {
+    const initData = await hashconnect.init(appMetadata, "mainnet", false);
+    saveData = initData.saveData;
+    console.log("HashConnect initialized:", initData);
+    return initData;
+};
+
+// Initialize HashConnect on server start
+initHashConnect();
+
+// Endpoint to get HashConnect pairing string
+app.get('/api/hashconnect/init', async (req, res) => {
+    const initData = await hashconnect.init(appMetadata, "mainnet", false);
+    saveData = initData.saveData;
+    res.json({ pairingString: initData.pairingString });
+});
+
+// Endpoint to handle pairing data
+app.post('/api/hashconnect/pair', async (req, res) => {
+    const { pairingData } = req.body;
+    hashconnect.pairingEvent.once((data) => {
+        console.log("Paired with wallet:", data);
+        res.json({ success: true, accountId: data.accountIds[0] });
+    });
+    await hashconnect.connectToLocalWallet(pairingData);
+});
 
 async function appendToGoogleSheet(xUsername, hederaWallet) {
     const timestamp = new Date().toISOString();
