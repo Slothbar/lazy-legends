@@ -2,30 +2,35 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchLeaderboard();
 
     let hederaWallet = null;
+    let hashconnect = null;
 
     const connectWallet = async () => {
         try {
-            const response = await fetch('/api/hashconnect/init');
-            const { pairingString } = await response.json();
-            console.log("Pairing String:", pairingString);
+            // Initialize HashConnect
+            hashconnect = new window.HashConnect(true);
+            const appMetadata = {
+                name: "Lazy Legends",
+                description: "A Chill2Earn game on Hedera",
+                icon: "https://i.ibb.co/7W8z8Qz/sloth-icon.png",
+                url: "https://lazylegendscoin.com"
+            };
 
-            alert(`Please connect your HashPack wallet using this pairing string: ${pairingString}`);
+            const initData = await hashconnect.init(appMetadata, "mainnet", false);
+            console.log("HashConnect initialized:", initData);
 
-            const pairingResponse = await fetch('/api/hashconnect/pair', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pairingData: pairingString })
-            });
-            const pairingData = await pairingResponse.json();
+            // Show pairing string to user
+            alert(`Please connect your HashPack wallet using this pairing string: ${initData.pairingString}`);
 
-            if (pairingData.success) {
-                hederaWallet = pairingData.accountId;
+            // Wait for pairing
+            hashconnect.pairingEvent.once((pairingData) => {
+                console.log("Paired with wallet:", pairingData);
+                hederaWallet = pairingData.accountIds[0];
                 document.getElementById('hedera-wallet').value = hederaWallet;
                 document.getElementById('hedera-wallet').disabled = true;
                 alert(`Connected wallet: ${hederaWallet}`);
-            } else {
-                alert('Failed to connect HashPack wallet. Please try again.');
-            }
+            });
+
+            await hashconnect.connectToLocalWallet(initData.pairingString);
         } catch (error) {
             console.error('Error connecting wallet:', error);
             alert('Error connecting HashPack wallet. Check the console for details.');
