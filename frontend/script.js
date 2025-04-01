@@ -1,21 +1,61 @@
 document.addEventListener('DOMContentLoaded', () => {
     fetchLeaderboard();
 
+    let hederaWallet = null;
+
+    const connectWallet = async () => {
+        try {
+            const response = await fetch('/api/hashconnect/init');
+            const { pairingString } = await response.json();
+            console.log("Pairing String:", pairingString);
+
+            alert(`Please connect your HashPack wallet using this pairing string: ${pairingString}`);
+
+            const pairingResponse = await fetch('/api/hashconnect/pair', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pairingData: pairingString })
+            });
+            const pairingData = await pairingResponse.json();
+
+            if (pairingData.success) {
+                hederaWallet = pairingData.accountId;
+                document.getElementById('hedera-wallet').value = hederaWallet;
+                document.getElementById('hedera-wallet').disabled = true;
+                alert(`Connected wallet: ${hederaWallet}`);
+            } else {
+                alert('Failed to connect HashPack wallet. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error connecting wallet:', error);
+            alert('Error connecting HashPack wallet. Check the console for details.');
+        }
+    };
+
+    document.getElementById('connect-wallet-btn').addEventListener('click', connectWallet);
+
     const profileForm = document.getElementById('profile-form');
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const xUsername = document.getElementById('x-username').value;
-        const hederaWallet = document.getElementById('hedera-wallet').value;
+        const hederaWalletInput = document.getElementById('hedera-wallet').value;
+
+        if (!hederaWallet) {
+            alert('Please connect your HashPack wallet first!');
+            return;
+        }
 
         const response = await fetch('/api/profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ xUsername, hederaWallet })
+            body: JSON.stringify({ xUsername, hederaWallet: hederaWalletInput })
         });
 
         if (response.ok) {
             alert('Profile saved successfully!');
             profileForm.reset();
+            hederaWallet = null;
+            document.getElementById('hedera-wallet').disabled = false;
             fetchLeaderboard();
         } else {
             alert('Error saving profile.');
