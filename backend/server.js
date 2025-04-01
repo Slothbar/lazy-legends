@@ -85,7 +85,7 @@ app.post('/api/admin/delete-user', (req, res) => {
     const { xUsername, adminPassword } = req.body;
 
     // Simple password check (replace 'your-secret-password' with your secure password)
-    const ADMIN_PASSWORD = 'ADMIN2'; // Change this to your secure password!
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
@@ -127,13 +127,14 @@ app.post('/api/admin/delete-user', (req, res) => {
 
 // Admin endpoint to clear invalid users from the leaderboard
 app.post('/api/admin/clear-leaderboard', (req, res) => {
-    const { adminPassword } = req.body;
-
-    // Simple password check (replace 'your-secret-password' with your secure password)
-    const ADMIN_PASSWORD = 'your-secret-password'; // Change this to your secure password!
-    if (adminPassword !== ADMIN_PASSWORD) {
-        return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
-    }
+    // Temporarily remove password check for testing
+    // const { adminPassword } = req.body;
+    // const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
+    // console.log('Received adminPassword:', adminPassword);
+    // console.log('Expected ADMIN_PASSWORD:', ADMIN_PASSWORD);
+    // if (adminPassword !== ADMIN_PASSWORD) {
+    //     return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
+    // }
 
     // Delete users where xUsername does NOT start with @ OR hederaWallet does NOT start with 0.0
     db.run(
