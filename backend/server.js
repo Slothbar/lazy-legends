@@ -85,7 +85,7 @@ app.post('/api/admin/delete-user', (req, res) => {
     const { xUsername, adminPassword } = req.body;
 
     // Simple password check (replace 'your-secret-password' with your secure password)
-    const ADMIN_PASSWORD = 'your-secret-password'; // Change this to your secure password!
+    const ADMIN_PASSWORD = 'admin2'; // Change this to your secure password!
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
