@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const { google } = require('googleapis');
+const { HashConnect, HashConnectTypes } = require('hashconnect');
 const db = require('./database.js');
 const path = require('path');
 
@@ -21,7 +22,41 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
 
 const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
-const lastChecked = {}; // Track last check time per user
+const lastChecked = {};
+
+// HashConnect Setup
+const hashconnect = new HashConnect();
+let appMetadata = {
+    name: "Lazy Legends",
+    description: "A Chill2Earn game on Hedera",
+    icon: "https://i.ibb.co/7W8z8Qz/sloth-icon.png",
+    url: "https://lazylegendscoin.com"
+};
+
+let hashconnectState = null;
+
+const initHashConnect = async () => {
+    const initData = await hashconnect.init(appMetadata, "mainnet", true);
+    hashconnectState = initData.state;
+    console.log("HashConnect initialized:", initData);
+    return initData.pairingString;
+};
+
+// Endpoint to get HashConnect pairing string
+app.get('/api/hashconnect/init', async (req, res) => {
+    const pairingString = await initHashConnect();
+    res.json({ pairingString });
+});
+
+// Endpoint to handle pairing data
+app.post('/api/hashconnect/pair', async (req, res) => {
+    const { pairingData } = req.body;
+    hashconnect.pairingEvent.on((data) => {
+        console.log("Paired with wallet:", data);
+        res.json({ success: true, accountId: data.accountIds[0] });
+    });
+    hashconnect.connectToLocalWallet(pairingData);
+});
 
 async function appendToGoogleSheet(xUsername, hederaWallet) {
     const timestamp = new Date().toISOString();
@@ -69,14 +104,22 @@ async function trackLazyLegendsPosts() {
         db.all(`SELECT xUsername FROM users`, [], async (err, rows) => {
             if (err) return console.error(err);
 
+            if (!rows || rows.length === 0) {
+                console.log('No users to check for #LazyLegends posts.');
+                return;
+            }
+
+            console.log(`Found ${rows.length} users to check.`);
+
             for (const row of rows) {
                 const lastTime = lastChecked[row.xUsername] || 0;
                 const now = Date.now();
-                if (now - lastTime < 900000) { // Skip if checked in last 15 minutes
-                    console.log(`Skipping ${row.xUsername} - checked recently`);
+                if (now - lastTime < 1800000) {
+                    console.log(`Skipping ${row.xUsername} - last checked at ${new Date(lastTime).toISOString()}`);
                     continue;
                 }
 
+                console.log(`Checking tweets for ${row.xUsername}...`);
                 try {
                     const response = await axios.get('https://api.twitter.com/2/tweets/search/recent', {
                         headers: { Authorization: `Bearer ${X_BEARER_TOKEN}` },
@@ -90,7 +133,7 @@ async function trackLazyLegendsPosts() {
                     const tweets = response.data.data || [];
                     const newTweets = tweets.filter(tweet => {
                         const tweetTime = new Date(tweet.created_at).getTime();
-                        return tweetTime > lastTime; // Only new tweets
+                        return tweetTime > lastTime;
                     });
 
                     const pointsToAdd = newTweets.length * 2;
@@ -103,19 +146,21 @@ async function trackLazyLegendsPosts() {
                                 console.log(`${row.xUsername} earned ${pointsToAdd} SloMo Points`);
                             }
                         );
+                    } else {
+                        console.log(`No new #LazyLegends tweets found for ${row.xUsername}`);
                     }
-                    lastChecked[row.xUsername] = now; // Update last checked time
+                    lastChecked[row.xUsername] = now;
                 } catch (error) {
                     console.error(`Error fetching tweets for ${row.xUsername}:`, error.response?.data || error.message);
                     if (error.response?.status === 429) {
-                        console.log('Hit 429 limit, waiting 60 seconds...');
-                        await new Promise(resolve => setTimeout(resolve, 60000)); // Wait 1 minute
+                        console.log('Hit 429 limit, waiting 5 minutes...');
+                        await new Promise(resolve => setTimeout(resolve, 300000));
                     }
                 }
-                await new Promise(resolve => setTimeout(resolve, 10000)); // 10-second delay between users
+                await new Promise(resolve => setTimeout(resolve, 30000));
             }
         });
-    }, 900000); // 15-minute interval
+    }, 1800000);
 }
 
 const PORT = process.env.PORT || 3000;
