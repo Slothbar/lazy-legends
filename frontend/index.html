@@ -1,60 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://unpkg.com/@hashgraph/hashconnect@0.11.0/dist/browser/hashconnect.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lazy Legends - Slothbar Memecoin Game</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- HashConnect CDN -->
+    <script src="https://unpkg.com/@hashgraph/hashconnect@0.11.0/dist/browser/hashconnect.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <a href="https://imgbb.com/"><img src="https://i.ibb.co/tpZNQFTz/Copy-of-Copy-of-Untitled-200-x-200-px-350-x-350-px-200-x-200-px.png" alt="Copy-of-Copy-of-Untitled-200-x-200-px-350-x-350-px-200-x-200-px" border="0"></a>
             <h1>Lazy Legends</h1>
-            <!-- NEW: Add a sloth tagline with animation -->
-            <p class="tagline">Chill, Post, Earn $SLOTH with #LazyLegends</p>
+            <p>Chill, Post, Earn $SLOTH with #LazyLegends</p>
         </header>
-        
+
         <section id="profile-section">
-    <h2>Link Your Profile</h2>
-    <div class="profile-header">
-        <a href="https://ibb.co/fd6R9dWJ"><img src="https://i.ibb.co/fd6R9dWJ/Twitter-X-Logo.png" alt="Twitter-X-Logo" border="0"></a>
-        <p>Connect your X account and Hedera wallet to join the fun!</p>
-    </div>
-    <form id="profile-form">
-        <div class="input-group">
-            <input type="text" id="x-username" placeholder="Your X Username (e.g., @LazySloth)" required>
-            <input type="text" id="hedera-wallet" placeholder="Hedera Wallet (e.g., 0.0.12345)" required>
-        </div>
-        <button type="submit">Link Profile</button>
-    </form>
-    <button id="view-profile-btn">View My Profile</button>
-</section>
+            <h2>Link Your Profile</h2>
+            <div class="profile-header">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/57/X_logo_2023.svg" alt="X Logo" class="x-logo">
+                <p>Connect your X account and Hedera wallet to join the fun!</p>
+            </div>
+            <form id="profile-form">
+                <div class="input-group">
+                    <input type="text" id="x-username" placeholder="Your X Username (e.g., @LazySloth)" required>
+                    <input type="text" id="hedera-wallet" placeholder="Hedera Wallet (e.g., 0.0.12345)" readonly required>
+                    <button type="button" id="connect-wallet-btn">Connect HashPack Wallet</button>
+                </div>
+                <button type="submit">Link Profile</button>
+            </form>
+            <button id="view-profile-btn">View My Profile</button>
+        </section>
 
         <section id="how-to-play-section">
-            <center><h2>How to Play Lazy Legends</h2></center>
+            <h2>How to Play Lazy Legends</h2>
             <p>Join the Chill2Earn fun and earn $SLOTH—here’s how:</p>
-            <!-- NEW: Add a sloth-themed list style -->
-            <ol class="sloth-list">
-                <li><strong>Start:</strong> <b>Hold</b> $SLOTH tokens or add liquidity to a $SLOTH liquidity pool.</li>
-                <li><strong>Link Up:</strong> Connect your X username and Hedera wallet above (we need this for tracking).</li>
-                <li><strong>Chill Hunt:</strong> Find chill X posts (people posting a night on the town, chillin' with the fam, etc).</li>
-                <li><strong>Slothify:</strong> Reply with a fun message or meme.<b>Remember to use #LazyLegends somewhere in your post!</b></li>
+            <ol>
+                <li><strong>Start:</strong> Hold $SLOTH tokens or add liquidity to a $SLOTH pool.</li>
+                <li><strong>Link Up:</strong> Connect your X username and Hedera wallet above.</li>
+                <li><strong>Chill Hunt:</strong> Find chill X posts (no crypto stuff).</li>
+                <li><strong>Slothify:</strong> Reply with a fun #LazyLegends message or meme.</li>
                 <li><strong>Bonus:</strong> Add a sloth GIF or pic for extra vibes.</li>
                 <li><strong>Score:</strong> Earn 2 SloMo Points per post—check the leaderboard!</li>
-                <li><strong>Win:</strong> Top players get $SLOTH tokens at the end of each season.</li>
+                <li><strong>Win:</strong> Top players get $SLOTH, NFTs, or perks every season (2-4 weeks).</li>
             </ol>
-            <center><p>Spread sloth vibes and climb the ranks!</p>
-            <p><strong>Tree of Life & Just Hangin' Around NFT Holder multipliers coming in season 2!</strong></p></center>
+            <p>Spread sloth vibes and climb the ranks!</p>
+        </section>
+
+        <section id="profile-view-section" style="display: none;">
+            <h2>Your Sloth Profile 🦥</h2>
+            <div id="profile-details">
+                <p><strong>X Username:</strong> <span id="profile-x-username"></span></p>
+                <p><strong>Hedera Wallet:</strong> <span id="profile-hedera-wallet"></span></p>
+                <p><strong>SloMo Points:</strong> <span id="profile-slo-mo-points"></span></p>
+            </div>
+            <button id="back-to-game-btn">Back to Game</button>
         </section>
 
         <section id="leaderboard-section">
-            <!-- NEW: Add a trophy icon -->
-            <center><h2><span class="trophy">🏆</span> Leaderboard - SloMo Points</h2></center>
-            <center><p>*Points update every 15 minutes.</p></center>
-            <table id="leaderboard" class="leaderboard-table">
+            <h2>Leaderboard - SloMo Points</h2>
+            <table id="leaderboard">
                 <thead>
                     <tr>
                         <th>Rank</th>
@@ -67,8 +73,7 @@
         </section>
 
         <footer>
-            <!-- NEW: Add a sloth emoji -->
-            <p>Powered by Slothbar Memecoin & Hedera Hashgraph 🦥</p>
+            <p>Powered by Slothbar Memecoin & Hedera Hashgraph</p>
         </footer>
     </div>
     <script src="script.js"></script>
