@@ -80,6 +80,31 @@ app.get('/api/leaderboard', (req, res) => {
     );
 });
 
+// New endpoint to remove a user by X username
+app.delete('/api/remove-user', (req, res) => {
+    const { xUsername } = req.body;
+
+    if (!xUsername) {
+        return res.status(400).json({ error: 'X username is required to remove a user.' });
+    }
+
+    db.run(
+        `DELETE FROM users WHERE xUsername = ?`,
+        [xUsername],
+        function (err) {
+            if (err) {
+                console.error('Error removing user:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            if (this.changes === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            console.log(`Removed user ${xUsername} from the database`);
+            res.status(200).json({ message: `User ${xUsername} removed successfully` });
+        }
+    );
+});
+
 async function trackLazyLegendsPosts() {
     setInterval(async () => {
         console.log('Checking for #LazyLegends posts now...');
