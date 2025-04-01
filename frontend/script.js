@@ -49,6 +49,40 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Error saving profile. Check the console for details.');
         }
     });
+
+    // Handle remove user form submission
+    const removeUserForm = document.getElementById('remove-user-form');
+    removeUserForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const xUsername = document.getElementById('remove-x-username').value.trim();
+
+        // Validate X username format
+        const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
+        if (!xUsernameRegex.test(xUsername)) {
+            alert('Invalid X username! It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/remove-user', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ xUsername })
+            });
+
+            if (response.ok) {
+                alert(`User ${xUsername} removed successfully!`);
+                removeUserForm.reset();
+                fetchLeaderboard(); // Refresh leaderboard
+            } else {
+                const errorData = await response.json();
+                alert(`Error removing user: ${errorData.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error removing user:', error);
+            alert('Error removing user. Check the console for details.');
+        }
+    });
 });
 
 // Function to fetch and display the leaderboard
