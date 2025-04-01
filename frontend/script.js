@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document W.addEventListener('DOMContentLoaded', () => {
     fetchLeaderboard();
 
     let hederaWallet = null;
