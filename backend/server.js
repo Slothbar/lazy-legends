@@ -41,6 +41,23 @@ async function appendToGoogleSheet(xUsername, hederaWallet) {
 
 app.post('/api/profile', (req, res) => {
     const { xUsername, hederaWallet } = req.body;
+
+    // Validate X username
+    const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
+    if (!xUsername || !xUsernameRegex.test(xUsername)) {
+        return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
+    }
+
+    // Validate Hedera wallet address
+    if (!hederaWallet || !hederaWallet.startsWith('0.0')) {
+        return res.status(400).json({ error: 'Invalid Hedera wallet address. It must start with 0.0 (e.g., 0.0.12345).' });
+    }
+
+    const hederaWalletRegex = /^0\.0\.\d+$/;
+    if (!hederaWalletRegex.test(hederaWallet)) {
+        return res.status(400).json({ error: 'Invalid Hedera wallet address format. It must be in the format 0.0.<number> (e.g., 0.0.12345).' });
+    }
+
     db.run(
         `INSERT INTO users (xUsername, hederaWallet) VALUES (?, ?) ON CONFLICT(xUsername) DO UPDATE SET hederaWallet = ?`,
         [xUsername, hederaWallet, hederaWallet],
