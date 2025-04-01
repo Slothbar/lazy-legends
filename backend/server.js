@@ -85,7 +85,7 @@ app.post('/api/admin/delete-user', (req, res) => {
     const { xUsername, adminPassword } = req.body;
 
     // Simple password check (replace 'your-secret-password' with your secure password)
-    const ADMIN_PASSWORD = 'admin2'; // Change this to your secure password!
+    const ADMIN_PASSWORD = 'your-secret-password'; // Change this to your secure password!
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
@@ -121,6 +121,30 @@ app.post('/api/admin/delete-user', (req, res) => {
                     res.status(200).json({ message: `Successfully deleted user ${xUsername}` });
                 }
             );
+        }
+    );
+});
+
+// Admin endpoint to clear invalid users from the leaderboard
+app.post('/api/admin/clear-leaderboard', (req, res) => {
+    const { adminPassword } = req.body;
+
+    // Simple password check (replace 'your-secret-password' with your secure password)
+    const ADMIN_PASSWORD = 'your-secret-password'; // Change this to your secure password!
+    if (adminPassword !== ADMIN_PASSWORD) {
+        return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
+    }
+
+    // Delete users where xUsername does NOT start with @ OR hederaWallet does NOT start with 0.0
+    db.run(
+        `DELETE FROM users WHERE xUsername NOT LIKE '@%' OR hederaWallet NOT LIKE '0.0%'`,
+        (err) => {
+            if (err) {
+                console.error('Error clearing invalid users from leaderboard:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            console.log('Cleared invalid users from the leaderboard');
+            res.status(200).json({ message: 'Successfully cleared invalid users from the leaderboard' });
         }
     );
 });
