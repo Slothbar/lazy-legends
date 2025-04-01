@@ -6,8 +6,6 @@
     <title>Lazy Legends - Slothbar Memecoin Game</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <!-- HashConnect CDN -->
-    <script src="https://unpkg.com/@hashgraph/hashconnect@0.11.0/dist/browser/hashconnect.js"></script>
 </head>
 <body>
     <div class="container">
@@ -25,12 +23,10 @@
             <form id="profile-form">
                 <div class="input-group">
                     <input type="text" id="x-username" placeholder="Your X Username (e.g., @LazySloth)" required>
-                    <input type="text" id="hedera-wallet" placeholder="Hedera Wallet (e.g., 0.0.12345)" readonly required>
-                    <button type="button" id="connect-wallet-btn">Connect HashPack Wallet</button>
+                    <input type="text" id="hedera-wallet" placeholder="Hedera Wallet (e.g., 0.0.12345)" required>
                 </div>
                 <button type="submit">Link Profile</button>
             </form>
-            <button id="view-profile-btn">View My Profile</button>
         </section>
 
         <section id="how-to-play-section">
@@ -46,16 +42,6 @@
                 <li><strong>Win:</strong> Top players get $SLOTH, NFTs, or perks every season (2-4 weeks).</li>
             </ol>
             <p>Spread sloth vibes and climb the ranks!</p>
-        </section>
-
-        <section id="profile-view-section" style="display: none;">
-            <h2>Your Sloth Profile 🦥</h2>
-            <div id="profile-details">
-                <p><strong>X Username:</strong> <span id="profile-x-username"></span></p>
-                <p><strong>Hedera Wallet:</strong> <span id="profile-hedera-wallet"></span></p>
-                <p><strong>SloMo Points:</strong> <span id="profile-slo-mo-points"></span></p>
-            </div>
-            <button id="back-to-game-btn">Back to Game</button>
         </section>
 
         <section id="leaderboard-section">
