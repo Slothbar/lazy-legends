@@ -1,46 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
     fetchLeaderboard();
 
-    let hederaWallet = null;
-
-    const connectWallet = async () => {
-        const response = await fetch('/api/hashconnect/init');
-        const { pairingString } = await response.json();
-        console.log("Pairing String:", pairingString);
-
-        alert(`Please connect your HashPack wallet using this pairing string: ${pairingString}`);
-
-        const pairingResponse = await fetch('/api/hashconnect/pair', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pairingData: pairingString })
-        });
-        const pairingData = await pairingResponse.json();
-        if (pairingData.success) {
-            hederaWallet = pairingData.accountId;
-            document.getElementById('hedera-wallet').value = hederaWallet;
-            document.getElementById('hedera-wallet').disabled = true;
-            alert(`Connected wallet: ${hederaWallet}`);
-        }
-    };
-
-    document.getElementById('connect-wallet-btn').addEventListener('click', connectWallet);
-
     const profileForm = document.getElementById('profile-form');
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const xUsername = document.getElementById('x-username').value;
-        const hederaWalletInput = document.getElementById('hedera-wallet').value;
-
-        if (!hederaWallet) {
-            alert('Please connect your HashPack wallet first!');
-            return;
-        }
+        const hederaWallet = document.getElementById('hedera-wallet').value;
 
         const response = await fetch('/api/profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ xUsername, hederaWallet: hederaWalletInput })
+            body: JSON.stringify({ xUsername, hederaWallet })
         });
 
         if (response.ok) {
@@ -52,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Profile viewing logic
     document.getElementById('view-profile-btn').addEventListener('click', async () => {
         const xUsername = prompt('Enter your X username to view your profile (e.g., @slothhbar):');
         if (!xUsername) return;
