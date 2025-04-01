@@ -17,7 +17,7 @@ const auth = new google.auth.GoogleAuth({
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '1SizgE0qHuB1JgTpOpifEdeJ_ABQEVaESHeFIdPGWeAQ';
 
 const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
@@ -85,7 +85,7 @@ app.post('/api/admin/delete-user', (req, res) => {
     const { xUsername, adminPassword } = req.body;
 
     // Simple password check (replace 'your-secret-password' with your secure password)
-    const ADMIN_PASSWORD = 'your-secret-password'; // Change this to your secure password!
+    const ADMIN_PASSWORD = 'admin2'; // Change this to your secure password!
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
