@@ -80,27 +80,47 @@ app.get('/api/leaderboard', (req, res) => {
     );
 });
 
-// New endpoint to remove a user by X username
-app.delete('/api/remove-user', (req, res) => {
-    const { xUsername } = req.body;
+// Admin endpoint to delete a user
+app.post('/api/admin/delete-user', (req, res) => {
+    const { xUsername, adminPassword } = req.body;
 
-    if (!xUsername) {
-        return res.status(400).json({ error: 'X username is required to remove a user.' });
+    // Simple password check (replace 'your-secret-password' with your secure password)
+    const ADMIN_PASSWORD = 'your-secret-password'; // Change this to your secure password!
+    if (adminPassword !== ADMIN_PASSWORD) {
+        return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
 
-    db.run(
-        `DELETE FROM users WHERE xUsername = ?`,
+    // Validate X username (must not be empty)
+    if (!xUsername) {
+        return res.status(400).json({ error: 'X username is required' });
+    }
+
+    // Check if the user exists
+    db.get(
+        `SELECT xUsername FROM users WHERE xUsername = ?`,
         [xUsername],
-        function (err) {
+        (err, row) => {
             if (err) {
-                console.error('Error removing user:', err);
+                console.error('Error checking user:', err);
                 return res.status(500).json({ error: 'Database error' });
             }
-            if (this.changes === 0) {
-                return res.status(404).json({ error: 'User not found' });
+            if (!row) {
+                return res.status(404).json({ error: `User ${xUsername} not found` });
             }
-            console.log(`Removed user ${xUsername} from the database`);
-            res.status(200).json({ message: `User ${xUsername} removed successfully` });
+
+            // Delete the user from the database
+            db.run(
+                `DELETE FROM users WHERE xUsername = ?`,
+                [xUsername],
+                (err) => {
+                    if (err) {
+                        console.error('Error deleting user:', err);
+                        return res.status(500).json({ error: 'Database error' });
+                    }
+                    console.log(`Deleted user ${xUsername} from the leaderboard`);
+                    res.status(200).json({ message: `Successfully deleted user ${xUsername}` });
+                }
+            );
         }
     );
 });
