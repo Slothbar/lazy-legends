@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const { google } = require('googleapis');
-const { HashConnect, HashConnectTypes } = require('hashconnect');
 const db = require('./database.js');
 const path = require('path');
 
@@ -23,40 +22,6 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
 const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
 const lastChecked = {};
-
-// HashConnect Setup
-const hashconnect = new HashConnect();
-let appMetadata = {
-    name: "Lazy Legends",
-    description: "A Chill2Earn game on Hedera",
-    icon: "https://i.ibb.co/7W8z8Qz/sloth-icon.png",
-    url: "https://lazylegendscoin.com"
-};
-
-let hashconnectState = null;
-
-const initHashConnect = async () => {
-    const initData = await hashconnect.init(appMetadata, "mainnet", true);
-    hashconnectState = initData.state;
-    console.log("HashConnect initialized:", initData);
-    return initData.pairingString;
-};
-
-// Endpoint to get HashConnect pairing string
-app.get('/api/hashconnect/init', async (req, res) => {
-    const pairingString = await initHashConnect();
-    res.json({ pairingString });
-});
-
-// Endpoint to handle pairing data
-app.post('/api/hashconnect/pair', async (req, res) => {
-    const { pairingData } = req.body;
-    hashconnect.pairingEvent.on((data) => {
-        console.log("Paired with wallet:", data);
-        res.json({ success: true, accountId: data.accountIds[0] });
-    });
-    hashconnect.connectToLocalWallet(pairingData);
-});
 
 async function appendToGoogleSheet(xUsername, hederaWallet) {
     const timestamp = new Date().toISOString();
@@ -94,6 +59,19 @@ app.get('/api/leaderboard', (req, res) => {
         (err, rows) => {
             if (err) return res.status(500).json({ error: 'Database error' });
             res.json(rows);
+        }
+    );
+});
+
+app.get('/api/profile/:xUsername', (req, res) => {
+    const { xUsername } = req.params;
+    db.get(
+        `SELECT xUsername, hederaWallet, sloMoPoints FROM users WHERE xUsername = ?`,
+        [xUsername],
+        (err, row) => {
+            if (err) return res.status(500).json({ error: 'Database error' });
+            if (!row) return res.status(404).json({ error: 'User not found' });
+            res.json(row);
         }
     );
 });
