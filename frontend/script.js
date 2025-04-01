@@ -2,6 +2,64 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load leaderboard on page load
     fetchLeaderboard();
 
+    // Handle hamburger menu toggle
+    const hamburgerMenu = document.querySelector('.hamburger-menu');
+    const hamburgerIcon = document.querySelector('.hamburger-icon');
+    hamburgerIcon.addEventListener('click', () => {
+        hamburgerMenu.classList.toggle('active');
+    });
+
+    // Handle admin panel login
+    const adminLink = document.getElementById('admin-link');
+    const adminPanel = document.getElementById('admin-panel');
+    const adminLogin = document.getElementById('admin-login');
+    const adminControls = document.getElementById('admin-controls');
+    const adminPasswordInput = document.getElementById('admin-password');
+    const adminLoginBtn = document.getElementById('admin-login-btn');
+
+    adminLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Hide other sections and show admin panel
+        document.querySelectorAll('section').forEach(section => section.style.display = 'none');
+        adminPanel.style.display = 'block';
+        hamburgerMenu.classList.remove('active'); // Close the menu
+    });
+
+    adminLoginBtn.addEventListener('click', () => {
+        const password = adminPasswordInput.value;
+        const ADMIN_PASSWORD = 'your-secret-password'; // Change this to your secure password!
+
+        if (password === ADMIN_PASSWORD) {
+            adminLogin.style.display = 'none';
+            adminControls.style.display = 'block';
+        } else {
+            alert('Invalid admin password. Please try again.');
+        }
+    });
+
+    // Handle clear invalid users button
+    const clearInvalidUsersBtn = document.getElementById('clear-invalid-users-btn');
+    clearInvalidUsersBtn.addEventListener('click', async () => {
+        try {
+            const response = await fetch('/api/admin/clear-leaderboard', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+
+            if (response.ok) {
+                alert('Successfully cleared invalid users from the leaderboard!');
+                fetchLeaderboard(); // Refresh the leaderboard
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error clearing invalid users:', error);
+            alert('Error clearing invalid users. Check the console for details.');
+        }
+    });
+
     // Handle profile form submission
     const profileForm = document.getElementById('profile-form');
     profileForm.addEventListener('submit', async (e) => {
@@ -49,43 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Error saving profile. Check the console for details.');
         }
     });
-
-    // Handle remove user form submission
-    const removeUserForm = document.getElementById('remove-user-form');
-    removeUserForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const xUsername = document.getElementById('remove-x-username').value.trim();
-
-        // Validate X username format
-        const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
-        if (!xUsernameRegex.test(xUsername)) {
-            alert('Invalid X username! It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).');
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/remove-user', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ xUsername })
-            });
-
-            if (response.ok) {
-                alert(`User ${xUsername} removed successfully!`);
-                removeUserForm.reset();
-                fetchLeaderboard(); // Refresh leaderboard
-            } else {
-                const errorData = await response.json();
-                alert(`Error removing user: ${errorData.error || 'Unknown error'}`);
-            }
-        } catch (error) {
-            console.error('Error removing user:', error);
-            alert('Error removing user. Check the console for details.');
-        }
-    });
 });
 
-// Function to fetch and display the leaderboard
 async function fetchLeaderboard() {
     try {
         const response = await fetch('/api/leaderboard');
