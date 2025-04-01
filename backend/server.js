@@ -129,7 +129,7 @@ app.post('/api/admin/delete-user', (req, res) => {
 app.post('/api/admin/clear-leaderboard', (req, res) => {
     // Check for API key in headers
     const apiKey = req.headers['sloth-admin-061511'];
-    const ADMIN_API_KEY = process.env.ADMIN_API_KEY || 'sloth-admin-default-key';
+    const ADMIN_API_KEY = process.env.ADMIN_API_KEY || 'sloth-admin-061511';
 
     if (!apiKey || apiKey !== ADMIN_API_KEY) {
         return res.status(403).json({ error: 'Unauthorized: Invalid API key' });
