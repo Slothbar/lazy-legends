@@ -56,18 +56,21 @@
             </ol>
             <p>Spread sloth vibes and climb the ranks!</p>
         </section>
-
-        <!-- New section for removing users -->
-        <section id="remove-user-section">
-            <h2>Remove a User (Admin Only)</h2>
-            <form id="remove-user-form">
-                <div class="input-group">
-                    <input type="text" id="remove-x-username" placeholder="X Username to Remove (e.g., @scammer)" required>
-                </div>
-                <button type="submit">Remove User</button>
-            </form>
+        
+        <!-- Admin Panel Section -->
+        <section id="admin-panel" style="display: none;">
+            <h2>Admin Panel 🦥</h2>
+            <div id="admin-login" style="display: block;">
+                <p>Enter the admin password to access the panel:</p>
+                <input type="password" id="admin-password" placeholder="Admin Password">
+                <button id="admin-login-btn">Login</button>
+            </div>
+            <div id="admin-controls" style="display: none;">
+                <p>Admin controls:</p>
+                <button id="clear-invalid-users-btn">Clear Invalid Users</button>
+            </div>
         </section>
-
+        
         <section id="leaderboard-section">
             <center><h2>🏆Leaderboard - SloMo Points</h2></center>
             <table id="leaderboard">
