@@ -27,6 +27,42 @@
             <p>Play2Earn Game by Slothbar Memecoin. Powered by Hedera Hashgraph.</p>
             <p>Chill, Post, Earn $SLOTH with #LazyLegends</p>
         </header>
+        <!-- Wallet Connect Section -->
+        <section id="wallet-connect-section">
+            <h2>Welcome to Lazy Legends</h2>
+            <div id="connect-wallet-group">
+                <button id="connect-wallet-btn">Connect Wallet</button>
+            </div>
+            <div id="authenticated-group" style="display: none;">
+                <button id="view-profile-btn">View Profile</button>
+                <button id="disconnect-wallet-btn">Disconnect Wallet</button>
+            </div>
+        </section>
+
+        <!-- Signup Section (for linking X account after wallet login) -->
+        <section id="signup-section" style="display: none;">
+            <h2>Complete Your Signup</h2>
+            <p>Please link your X account to start playing!</p>
+            <form id="signup-form">
+                <div class="input-group">
+                    <input type="text" id="signup-x-username" placeholder="Your X Username (e.g., @LazySloth)" required>
+                </div>
+                <button type="submit">Link X Account</button>
+            </form>
+        </section>
+
+        <!-- Profile Section -->
+        <section id="profile-section" style="display: none;">
+            <h2>Your Sloth Profile 🦥</h2>
+            <div id="profile-details">
+                <p><strong>Hedera Account:</strong> <span id="profile-hedera-account"></span></p>
+                <p><strong>X Username:</strong> <span id="profile-x-username"></span></p>
+                <p><strong>SloMo Points:</strong> <span id="profile-slo-mo-points"></span></p>
+                <p><strong>Leaderboard Rank:</strong> <span id="profile-leaderboard-rank"></span></p>
+            </div>
+            <button id="back-to-home-from-profile-btn">Back to Home</button>
+        </section>
+        
         <section id="how-to-play-section">
             <center><h2>How to Play Lazy Legends</h2></center>
             <p>Join the Chill2Earn fun and earn $SLOTH—here’s how:</p>
