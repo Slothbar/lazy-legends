@@ -1,12 +1,11 @@
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('/app/data/lazy-legends.db'); // Save to a file on Render's disk
+const db = new sqlite3.Database('/app/data/lazy-legends.db');
 
 db.serialize(() => {
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            xUsername TEXT UNIQUE,
-            hederaWallet TEXT,
+            hederaAccountId TEXT PRIMARY KEY,
+            xUsername TEXT,
             sloMoPoints INTEGER DEFAULT 0
         )
     `);
