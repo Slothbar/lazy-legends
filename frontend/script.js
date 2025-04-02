@@ -136,65 +136,56 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Handle wallet connect
     const connectWalletBtn = document.getElementById('connect-wallet-btn');
-    const viewProfileBtn = document.getElementById('view-profile-btn');
-    const disconnectWalletBtn = document.getElementById('disconnect-wallet-btn');
-    const walletConnectSection = document.getElementById('wallet-connect-section');
-    const signupSection = document.getElementById('signup-section');
-    const profileSection = document.getElementById('profile-section');
-    const signupForm = document.getElementById('signup-form');
-    const backToHomeFromProfileBtn = document.getElementById('back-to-home-from-profile-btn');
-
-    if (connectWalletBtn) {
-        connectWalletBtn.addEventListener('click', async () => {
-            try {
-                const { uri, approval } = await walletConnectModal.connect({
-                    requiredNamespaces: {
-                        hedera: {
-                            methods: ['hedera_sign'],
-                            chains: ['hedera:mainnet'],
-                            events: ['chainChanged', 'accountsChanged']
-                        }
+if (connectWalletBtn) {
+    connectWalletBtn.addEventListener('click', async () => {
+        try {
+            const { uri, approval } = await walletConnectModal.connect({
+                requiredNamespaces: {
+                    hedera: {
+                        methods: ['hedera_sign'],
+                        chains: ['hedera:mainnet'],
+                        events: ['chainChanged', 'accountsChanged']
                     }
-                });
-
-                // Open QR code modal
-                walletConnectModal.openModal({ uri });
-
-                // Wait for wallet approval
-                const session = await approval();
-                walletConnectModal.closeModal();
-
-                // Get the Hedera account ID from the session
-                const accounts = session.namespaces.hedera.accounts;
-                hederaAccountId = accounts[0].split(':')[2]; // Extract account ID (e.g., "0.0.12345")
-
-                // Log in with the Hedera account ID
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ hederaAccountId })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    if (data.needsSignup) {
-                        // Show signup section to link X account
-                        document.querySelectorAll('section').forEach(section => section.style.display = 'none');
-                        signupSection.style.display = 'block';
-                    } else {
-                        // Show profile section
-                        showProfile(data.user);
-                    }
-                } else {
-                    alert(`Error: ${data.error || 'Unknown error'}`);
                 }
-            } catch (error) {
-                console.error('Error connecting wallet:', error);
-                alert('Error connecting wallet. Check the console for details.');
-            }
-        });
-    }
+            });
 
+            // Open QR code modal
+            walletConnectModal.openModal({ uri });
+
+            // Wait for wallet approval
+            const session = await approval();
+            walletConnectModal.closeModal();
+
+            // Get the Hedera account ID from the session
+            const accounts = session.namespaces.hedera.accounts;
+            hederaAccountId = accounts[0].split(':')[2]; // Extract account ID (e.g., "0.0.12345")
+
+            // Log in with the Hedera account ID
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hederaAccountId })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                if (data.needsSignup) {
+                    // Show signup section to link X account
+                    document.querySelectorAll('section').forEach(section => section.style.display = 'none');
+                    signupSection.style.display = 'block';
+                } else {
+                    // Show profile section
+                    showProfile(data.user);
+                }
+            } else {
+                alert(`Error: ${data.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error connecting wallet:', error);
+            alert('Error connecting wallet. Check the console for details.');
+        }
+    });
+}
     if (signupForm) {
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
