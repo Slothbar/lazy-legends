@@ -167,6 +167,48 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
     });
 });
 
+// Admin endpoint to reset the entire leaderboard
+app.post('/api/admin/reset-leaderboard', (req, res) => {
+    const { adminPassword } = req.body;
+
+    // Simple password check (replace 'your-secret-password' with your secure password)
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
+    if (adminPassword !== ADMIN_PASSWORD) {
+        return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
+    }
+
+    // Log the current users before deletion
+    db.all(`SELECT xUsername, hederaWallet FROM users`, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching users before resetting:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        console.log('Users before resetting:', rows);
+
+        // Delete all users from the database
+        db.run(
+            `DELETE FROM users`,
+            (err) => {
+                if (err) {
+                    console.error('Error resetting leaderboard:', err);
+                    return res.status(500).json({ error: 'Database error' });
+                }
+                console.log('Reset the entire leaderboard');
+
+                // Verify the table is empty
+                db.all(`SELECT xUsername, hederaWallet FROM users`, [], (err, remainingRows) => {
+                    if (err) {
+                        console.error('Error fetching users after resetting:', err);
+                        return res.status(500).json({ error: 'Database error' });
+                    }
+                    console.log('Users after resetting:', remainingRows);
+                    res.status(200).json({ message: 'Successfully reset the leaderboard' });
+                });
+            }
+        );
+    });
+});
+
 async function trackLazyLegendsPosts() {
     setInterval(async () => {
         console.log('Checking for #LazyLegends posts now...');
