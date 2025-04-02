@@ -16,6 +16,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminControls = document.getElementById('admin-controls');
     const adminPasswordInput = document.getElementById('admin-password');
     const adminLoginBtn = document.getElementById('admin-login-btn');
+    const backToHomeBtn = document.getElementById('back-to-home-btn');
+    const clearInvalidUsersBtn = document.getElementById('clear-invalid-users-btn');
+
+    // Debug: Check if elements are found
+    console.log('Admin Link:', adminLink);
+    console.log('Admin Panel:', adminPanel);
+    console.log('Admin Login:', adminLogin);
+    console.log('Admin Controls:', adminControls);
+    console.log('Admin Password Input:', adminPasswordInput);
+    console.log('Admin Login Button:', adminLoginBtn);
+    console.log('Back to Home Button:', backToHomeBtn);
+    console.log('Clear Invalid Users Button:', clearInvalidUsersBtn);
 
     adminLink.addEventListener('click', (e) => {
         e.preventDefault();
@@ -27,24 +39,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     adminLoginBtn.addEventListener('click', () => {
         const password = adminPasswordInput.value;
-        const ADMIN_PASSWORD = 'your-secret-password'; // Change this to your secure password!
+        const ADMIN_PASSWORD = 'your-secret-password'; // This will be removed after testing
 
         if (password === ADMIN_PASSWORD) {
             adminLogin.style.display = 'none';
             adminControls.style.display = 'block';
+            adminPasswordInput.dataset.password = password; // Store the password for later use
         } else {
             alert('Invalid admin password. Please try again.');
         }
     });
 
+    // Handle back to home button
+    backToHomeBtn.addEventListener('click', () => {
+        console.log('Back to Home button clicked'); // Debug log
+        // Hide admin panel and show other sections
+        document.querySelectorAll('section').forEach(section => section.style.display = 'block');
+        adminPanel.style.display = 'none';
+        adminLogin.style.display = 'block';
+        adminControls.style.display = 'none';
+        adminPasswordInput.value = ''; // Clear the password input
+    });
+
     // Handle clear invalid users button
-    const clearInvalidUsersBtn = document.getElementById('clear-invalid-users-btn');
     clearInvalidUsersBtn.addEventListener('click', async () => {
+        console.log('Clear Invalid Users button clicked'); // Debug log
+        const adminPassword = adminPasswordInput.dataset.password; // Retrieve the stored password
         try {
             const response = await fetch('/api/admin/clear-leaderboard', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({})
+                body: JSON.stringify({ adminPassword })
             });
 
             if (response.ok) {
@@ -121,11 +146,4 @@ async function fetchLeaderboard() {
             row.innerHTML = `
                 <td>${index + 1}</td>
                 <td>${entry.xUsername}</td>
-                <td>${entry.sloMoPoints}</td>
-            `;
-            leaderboardBody.appendChild(row);
-        });
-    } catch (error) {
-        console.error('Error fetching leaderboard:', error);
-    }
-}
+                <td>${entry
