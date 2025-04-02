@@ -291,7 +291,7 @@ footer {
     box-shadow: 0 0 5px rgba(74, 124, 89, 0.5);
 }
 
-#admin-login-btn, #clear-invalid-users-btn, #back-to-home-btn {
+#admin-login-btn, #clear-invalid-users-btn, #reset-leaderboard-btn, #back-to-home-btn {
     padding: 10px 20px;
     background: linear-gradient(90deg, #4a7c59, #6b9e78);
     color: white;
@@ -304,9 +304,18 @@ footer {
     z-index: 10; /* Ensure the button is clickable */
 }
 
-#admin-login-btn:hover, #clear-invalid-users-btn:hover, #back-to-home-btn:hover {
+#admin-login-btn:hover, #clear-invalid-users-btn:hover, #reset-leaderboard-btn:hover, #back-to-home-btn:hover {
     background: linear-gradient(90deg, #6b9e78, #8ab89a);
     transform: scale(1.05);
+}
+
+/* Style the Reset Leaderboard button to stand out */
+#reset-leaderboard-btn {
+    background: linear-gradient(90deg, #d9534f, #c9302c); /* Red to indicate a significant action */
+}
+
+#reset-leaderboard-btn:hover {
+    background: linear-gradient(90deg, #c9302c, #b52b27);
 }
 
 @keyframes fadeIn {
