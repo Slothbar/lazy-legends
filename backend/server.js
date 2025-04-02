@@ -12,10 +12,10 @@ app.use(express.json());
 
 // Set up session management
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-session-secret', // Change this to a secure secret
+    secret: process.env.SESSION_SECRET || 'your-session-secret',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production' } // Use secure cookies in production
+    cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
 app.use(express.static(path.join(__dirname, '../frontend')));
@@ -47,6 +47,11 @@ async function appendToGoogleSheet(hederaAccountId, xUsername) {
         console.error('Error appending to Google Sheet:', error);
     }
 }
+
+// Endpoint to get WalletConnect project ID
+app.get('/api/walletconnect-config', (req, res) => {
+    res.json({ projectId: process.env.WALLET_CONNECT_PROJECT_ID || 'your-walletconnect-project-id' });
+});
 
 // Endpoint to check if user is authenticated and get their data
 app.get('/api/user', (req, res) => {
@@ -148,7 +153,7 @@ app.get('/api/leaderboard', (req, res) => {
 app.post('/api/admin/delete-user', (req, res) => {
     const { xUsername, adminPassword } = req.body;
 
-    // Simple password check (replace 'your-secret-password' with your secure password)
+    // Simple password check
     const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
@@ -193,7 +198,7 @@ app.post('/api/admin/delete-user', (req, res) => {
 app.post('/api/admin/clear-leaderboard', (req, res) => {
     const { adminPassword } = req.body;
 
-    // Simple password check (replace 'your-secret-password' with your secure password)
+    // Simple password check
     const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
@@ -235,7 +240,7 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
 app.post('/api/admin/reset-leaderboard', (req, res) => {
     const { adminPassword } = req.body;
 
-    // Simple password check (replace 'your-secret-password' with your secure password)
+    // Simple password check
     const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
