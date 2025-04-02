@@ -1,8 +1,20 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Fetch WalletConnect project ID from the backend
+    let walletConnectProjectId = '';
+    try {
+        const response = await fetch('/api/walletconnect-config');
+        const data = await response.json();
+        walletConnectProjectId = data.projectId;
+    } catch (error) {
+        console.error('Error fetching WalletConnect project ID:', error);
+        alert('Error initializing WalletConnect. Please try again later.');
+        return;
+    }
+
     // Initialize WalletConnect
     const walletConnectModal = new window.WalletConnectModal.default({
-        projectId: 'your-walletconnect-project-id', // Replace with your WalletConnect project ID
-        chains: ['hedera:mainnet'], // Specify Hedera mainnet
+        projectId: walletConnectProjectId,
+        chains: ['hedera:mainnet'],
         themeMode: 'light',
     });
 
