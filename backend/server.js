@@ -17,7 +17,7 @@ const auth = new google.auth.GoogleAuth({
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '1SizgE0qHuB1JgTpOpifEdeJ_ABQEVaESHeFIdPGWeAQ';
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
 
 const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
@@ -135,18 +135,36 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
 
-    // Delete users where xUsername does NOT start with @ OR hederaWallet does NOT start with 0.0
-    db.run(
-        `DELETE FROM users WHERE xUsername NOT LIKE '@%' OR hederaWallet NOT LIKE '0.0%'`,
-        (err) => {
-            if (err) {
-                console.error('Error clearing invalid users from leaderboard:', err);
-                return res.status(500).json({ error: 'Database error' });
-            }
-            console.log('Cleared invalid users from the leaderboard');
-            res.status(200).json({ message: 'Successfully cleared invalid users from the leaderboard' });
+    // Log the current users before deletion
+    db.all(`SELECT xUsername, hederaWallet FROM users`, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching users before clearing:', err);
+            return res.status(500).json({ error: 'Database error' });
         }
-    );
+        console.log('Users before clearing:', rows);
+
+        // Delete users where xUsername does NOT start with @ OR hederaWallet does NOT start with 0.0
+        db.run(
+            `DELETE FROM users WHERE xUsername NOT LIKE '@%' OR hederaWallet NOT LIKE '0.0%'`,
+            (err) => {
+                if (err) {
+                    console.error('Error clearing invalid users from leaderboard:', err);
+                    return res.status(500).json({ error: 'Database error' });
+                }
+                console.log('Cleared invalid users from the leaderboard');
+
+                // Log the remaining users after deletion
+                db.all(`SELECT xUsername, hederaWallet FROM users`, [], (err, remainingRows) => {
+                    if (err) {
+                        console.error('Error fetching users after clearing:', err);
+                        return res.status(500).json({ error: 'Database error' });
+                    }
+                    console.log('Users after clearing:', remainingRows);
+                    res.status(200).json({ message: 'Successfully cleared invalid users from the leaderboard' });
+                });
+            }
+        );
+    });
 });
 
 async function trackLazyLegendsPosts() {
