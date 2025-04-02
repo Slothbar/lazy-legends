@@ -2,12 +2,21 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const { google } = require('googleapis');
+const session = require('express-session');
 const db = require('./database.js');
 const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Set up session management
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-session-secret', // Change this to a secure secret
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: process.env.NODE_ENV === 'production' } // Use secure cookies in production
+}));
 
 app.use(express.static(path.join(__dirname, '../frontend')));
 
@@ -17,15 +26,15 @@ const auth = new google.auth.GoogleAuth({
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '1SizgE0qHuB1JgTpOpifEdeJ_ABQEVaESHeFIdPGWeAQ';
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
 
 const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
 const lastChecked = {};
 
-async function appendToGoogleSheet(xUsername, hederaWallet) {
+async function appendToGoogleSheet(hederaAccountId, xUsername) {
     const timestamp = new Date().toISOString();
-    const values = [[xUsername, hederaWallet, timestamp]];
+    const values = [[hederaAccountId, xUsername, timestamp]];
     try {
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
@@ -33,14 +42,70 @@ async function appendToGoogleSheet(xUsername, hederaWallet) {
             valueInputOption: 'RAW',
             resource: { values },
         });
-        console.log(`Appended ${xUsername} to Google Sheet`);
+        console.log(`Appended ${hederaAccountId} to Google Sheet`);
     } catch (error) {
         console.error('Error appending to Google Sheet:', error);
     }
 }
 
-app.post('/api/profile', (req, res) => {
-    const { xUsername, hederaWallet } = req.body;
+// Endpoint to check if user is authenticated and get their data
+app.get('/api/user', (req, res) => {
+    if (req.session.hederaAccountId) {
+        db.get(
+            `SELECT hederaAccountId, xUsername, sloMoPoints FROM users WHERE hederaAccountId = ?`,
+            [req.session.hederaAccountId],
+            (err, row) => {
+                if (err) return res.status(500).json({ error: 'Database error' });
+                if (!row) return res.status(404).json({ error: 'User not found' });
+                res.json(row);
+            }
+        );
+    } else {
+        res.status(401).json({ error: 'Not authenticated' });
+    }
+});
+
+// Endpoint to log in with wallet (called after WalletConnect connection)
+app.post('/api/login', (req, res) => {
+    const { hederaAccountId } = req.body;
+
+    if (!hederaAccountId || !hederaAccountId.startsWith('0.0')) {
+        return res.status(400).json({ error: 'Invalid Hedera account ID' });
+    }
+
+    // Store the Hedera account ID in the session
+    req.session.hederaAccountId = hederaAccountId;
+
+    // Check if the user exists in the database
+    db.get(
+        `SELECT hederaAccountId, xUsername FROM users WHERE hederaAccountId = ?`,
+        [hederaAccountId],
+        (err, row) => {
+            if (err) return res.status(500).json({ error: 'Database error' });
+            if (row) {
+                res.json({ user: row, needsSignup: !row.xUsername });
+            } else {
+                // New user, needs to sign up
+                db.run(
+                    `INSERT INTO users (hederaAccountId) VALUES (?)`,
+                    [hederaAccountId],
+                    (err) => {
+                        if (err) return res.status(500).json({ error: 'Database error' });
+                        res.json({ user: { hederaAccountId }, needsSignup: true });
+                    }
+                );
+            }
+        }
+    );
+});
+
+// Endpoint to sign up (link X account)
+app.post('/api/signup', (req, res) => {
+    if (!req.session.hederaAccountId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const { xUsername } = req.body;
 
     // Validate X username
     const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
@@ -48,30 +113,29 @@ app.post('/api/profile', (req, res) => {
         return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
     }
 
-    // Validate Hedera wallet address
-    if (!hederaWallet || !hederaWallet.startsWith('0.0')) {
-        return res.status(400).json({ error: 'Invalid Hedera wallet address. It must start with 0.0 (e.g., 0.0.12345).' });
-    }
-
-    const hederaWalletRegex = /^0\.0\.\d+$/;
-    if (!hederaWalletRegex.test(hederaWallet)) {
-        return res.status(400).json({ error: 'Invalid Hedera wallet address format. It must be in the format 0.0.<number> (e.g., 0.0.12345).' });
-    }
-
+    // Update the user's record with the X username
     db.run(
-        `INSERT INTO users (xUsername, hederaWallet) VALUES (?, ?) ON CONFLICT(xUsername) DO UPDATE SET hederaWallet = ?`,
-        [xUsername, hederaWallet, hederaWallet],
+        `UPDATE users SET xUsername = ? WHERE hederaAccountId = ?`,
+        [xUsername, req.session.hederaAccountId],
         async (err) => {
             if (err) return res.status(500).json({ error: 'Database error' });
-            await appendToGoogleSheet(xUsername, hederaWallet);
-            res.status(200).json({ message: 'Profile saved' });
+            await appendToGoogleSheet(req.session.hederaAccountId, xUsername);
+            res.status(200).json({ message: 'X account linked successfully' });
         }
     );
 });
 
+// Endpoint to disconnect wallet (logout)
+app.post('/api/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) return res.status(500).json({ error: 'Failed to log out' });
+        res.status(200).json({ message: 'Logged out successfully' });
+    });
+});
+
 app.get('/api/leaderboard', (req, res) => {
     db.all(
-        `SELECT xUsername, sloMoPoints FROM users ORDER BY sloMoPoints DESC LIMIT 10`,
+        `SELECT xUsername, sloMoPoints FROM users WHERE xUsername IS NOT NULL ORDER BY sloMoPoints DESC LIMIT 10`,
         [],
         (err, rows) => {
             if (err) return res.status(500).json({ error: 'Database error' });
@@ -97,7 +161,7 @@ app.post('/api/admin/delete-user', (req, res) => {
 
     // Check if the user exists
     db.get(
-        `SELECT xUsername FROM users WHERE xUsername = ?`,
+        `SELECT hederaAccountId FROM users WHERE xUsername = ?`,
         [xUsername],
         (err, row) => {
             if (err) {
@@ -136,16 +200,16 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
     }
 
     // Log the current users before deletion
-    db.all(`SELECT xUsername, hederaWallet FROM users`, [], (err, rows) => {
+    db.all(`SELECT hederaAccountId, xUsername FROM users`, [], (err, rows) => {
         if (err) {
             console.error('Error fetching users before clearing:', err);
             return res.status(500).json({ error: 'Database error' });
         }
         console.log('Users before clearing:', rows);
 
-        // Delete users where xUsername does NOT start with @ OR hederaWallet does NOT start with 0.0
+        // Delete users where xUsername is NULL (not linked)
         db.run(
-            `DELETE FROM users WHERE xUsername NOT LIKE '@%' OR hederaWallet NOT LIKE '0.0%'`,
+            `DELETE FROM users WHERE xUsername IS NULL`,
             (err) => {
                 if (err) {
                     console.error('Error clearing invalid users from leaderboard:', err);
@@ -154,7 +218,7 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
                 console.log('Cleared invalid users from the leaderboard');
 
                 // Log the remaining users after deletion
-                db.all(`SELECT xUsername, hederaWallet FROM users`, [], (err, remainingRows) => {
+                db.all(`SELECT hederaAccountId, xUsername FROM users`, [], (err, remainingRows) => {
                     if (err) {
                         console.error('Error fetching users after clearing:', err);
                         return res.status(500).json({ error: 'Database error' });
@@ -178,7 +242,7 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
     }
 
     // Log the current users before deletion
-    db.all(`SELECT xUsername, hederaWallet FROM users`, [], (err, rows) => {
+    db.all(`SELECT hederaAccountId, xUsername FROM users`, [], (err, rows) => {
         if (err) {
             console.error('Error fetching users before resetting:', err);
             return res.status(500).json({ error: 'Database error' });
@@ -196,7 +260,7 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
                 console.log('Reset the entire leaderboard');
 
                 // Verify the table is empty
-                db.all(`SELECT xUsername, hederaWallet FROM users`, [], (err, remainingRows) => {
+                db.all(`SELECT hederaAccountId, xUsername FROM users`, [], (err, remainingRows) => {
                     if (err) {
                         console.error('Error fetching users after resetting:', err);
                         return res.status(500).json({ error: 'Database error' });
@@ -212,7 +276,7 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
 async function trackLazyLegendsPosts() {
     setInterval(async () => {
         console.log('Checking for #LazyLegends posts now...');
-        db.all(`SELECT xUsername FROM users`, [], async (err, rows) => {
+        db.all(`SELECT hederaAccountId, xUsername FROM users WHERE xUsername IS NOT NULL`, [], async (err, rows) => {
             if (err) return console.error(err);
 
             if (!rows || rows.length === 0) {
@@ -223,7 +287,7 @@ async function trackLazyLegendsPosts() {
             console.log(`Found ${rows.length} users to check.`);
 
             for (const row of rows) {
-                const lastTime = lastChecked[row.xUsername] || 0;
+                const lastTime = lastChecked[row.hederaAccountId] || 0;
                 const now = Date.now();
                 if (now - lastTime < 1800000) {
                     console.log(`Skipping ${row.xUsername} - last checked at ${new Date(lastTime).toISOString()}`);
@@ -250,8 +314,8 @@ async function trackLazyLegendsPosts() {
                     const pointsToAdd = newTweets.length * 2;
                     if (pointsToAdd > 0) {
                         db.run(
-                            `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE xUsername = ?`,
-                            [pointsToAdd, row.xUsername],
+                            `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE hederaAccountId = ?`,
+                            [pointsToAdd, row.hederaAccountId],
                             (err) => {
                                 if (err) console.error(err);
                                 console.log(`${row.xUsername} earned ${pointsToAdd} SloMo Points`);
@@ -260,7 +324,7 @@ async function trackLazyLegendsPosts() {
                     } else {
                         console.log(`No new #LazyLegends tweets found for ${row.xUsername}`);
                     }
-                    lastChecked[row.xUsername] = now;
+                    lastChecked[row.hederaAccountId] = now;
                 } catch (error) {
                     console.error(`Error fetching tweets for ${row.xUsername}:`, error.response?.data || error.message);
                     if (error.response?.status === 429) {
