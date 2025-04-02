@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         adminLoginBtn.addEventListener('click', () => {
             console.log('Admin login button clicked'); // Debug log
             const password = adminPasswordInput.value;
-            const ADMIN_PASSWORD = 'your-secret-password'; // Change this to your secure password!
+            const ADMIN_PASSWORD = 'your-secret-password'; // This will be removed after testing
 
             if (password === ADMIN_PASSWORD) {
                 adminLogin.style.display = 'none';
