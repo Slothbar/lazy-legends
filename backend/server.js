@@ -127,12 +127,12 @@ app.post('/api/admin/delete-user', (req, res) => {
 
 // Admin endpoint to clear invalid users from the leaderboard
 app.post('/api/admin/clear-leaderboard', (req, res) => {
-    // Check for API key in headers
-    const apiKey = req.headers['sloth-admin-061511'];
-    const ADMIN_API_KEY = process.env.ADMIN_API_KEY || 'sloth-admin-061511';
+    const { adminPassword } = req.body;
 
-    if (!apiKey || apiKey !== ADMIN_API_KEY) {
-        return res.status(403).json({ error: 'Unauthorized: Invalid API key' });
+    // Simple password check (replace 'your-secret-password' with your secure password)
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
+    if (adminPassword !== ADMIN_PASSWORD) {
+        return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
 
     // Delete users where xUsername does NOT start with @ OR hederaWallet does NOT start with 0.0
