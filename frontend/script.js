@@ -12,15 +12,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Check if WalletConnectModal is available
-    console.log('WalletConnectModal:', window.WalletConnectModal);
+    // Initialize WalletConnect SignClient
+    let signClient;
+    try {
+        signClient = await window.initWalletConnect(walletConnectProjectId);
+        console.log('SignClient initialized:', signClient);
+    } catch (error) {
+        console.error('Error initializing SignClient:', error);
+        alert('Error initializing WalletConnect. Check the console for details.');
+        return;
+    }
 
-    // Initialize WalletConnect
+    // Initialize WalletConnect Modal
     let walletConnectModal;
     try {
         walletConnectModal = new window.WalletConnectModal({
             projectId: walletConnectProjectId,
-            chains: ['hedera:mainnet'],
             themeMode: 'light',
         });
         console.log('WalletConnectModal initialized:', walletConnectModal);
@@ -157,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('Connect Wallet button clicked');
             try {
                 console.log('Initiating WalletConnect connection...');
-                const { uri, approval } = await walletConnectModal.connect({
+                const { uri, approval } = await signClient.connect({
                     requiredNamespaces: {
                         hedera: {
                             methods: ['hedera_sign'],
@@ -255,7 +262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (disconnectWalletBtn) {
         disconnectWalletBtn.addEventListener('click', async () => {
             try {
-                await walletConnectModal.disconnect();
+                await signClient.disconnect();
                 const response = await fetch('/api/logout', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
@@ -333,12 +340,4 @@ document.addEventListener('DOMContentLoaded', async () => {
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${entry.xUsername}</td>
-                    <td>${entry.sloMoPoints}</td>
-                `;
-                leaderboardBody.appendChild(row);
-            });
-        } catch (error) {
-            console.error('Error fetching leaderboard:', error);
-        }
-    }
-});
+                    <
