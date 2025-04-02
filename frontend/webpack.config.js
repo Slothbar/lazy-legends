@@ -5,9 +5,9 @@ module.exports = {
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
-        library: 'WalletConnect', // Expose as a global variable
-        libraryTarget: 'window', // Attach to window object
-        globalObject: 'this' // Ensure compatibility in browser
+        library: 'WalletConnect',
+        libraryTarget: 'window',
+        globalObject: 'this'
     },
     mode: 'production',
     resolve: {
