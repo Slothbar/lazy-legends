@@ -5,6 +5,10 @@
     box-sizing: border-box;
 }
 
+#back-to-home-btn {
+    z-index: 10; /* Ensure the button is above other elements */
+}
+
 body {
     font-family: 'Poppins', Arial, sans-serif;
     background: linear-gradient(135deg, #f0f8e6 0%, #d9e8c9 100%);
