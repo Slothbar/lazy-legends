@@ -1,0 +1,17 @@
+{
+    "name": "lazy-legends-frontend",
+    "version": "1.0.0",
+    "scripts": {
+        "build": "webpack --config webpack.config.js",
+        "start": "webpack serve --open"
+    },
+    "dependencies": {
+        "@walletconnect/sign-client": "^2.10.0",
+        "@walletconnect/modal": "^2.6.2"
+    },
+    "devDependencies": {
+        "webpack": "^5.88.2",
+        "webpack-cli": "^5.1.4",
+        "webpack-dev-server": "^4.15.1"
+    }
+}
