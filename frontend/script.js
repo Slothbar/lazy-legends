@@ -340,4 +340,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${entry.xUsername}</td>
-                    <
+                    <td>${entry.sloMoPoints}</td>
+                `;
+                leaderboardBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error fetching leaderboard:', error);
+        }
+    }
+});
