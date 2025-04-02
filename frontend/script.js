@@ -257,4 +257,80 @@ document.addEventListener('DOMContentLoaded', async () => {
                     hederaAccountId = null;
                     connectWalletBtn.style.display = 'block';
                     viewProfileBtn.style.display = 'none';
-                    disconnectWalletBtn.style.display = 'non
+                    disconnectWalletBtn.style.display = 'none';
+                    document.querySelectorAll('section').forEach(section => section.style.display = 'block');
+                    profileSection.style.display = 'none';
+                    fetchLeaderboard();
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error disconnecting wallet:', error);
+                alert('Error disconnecting wallet. Check the console for details.');
+            }
+        });
+    }
+
+    if (backToHomeFromProfileBtn) {
+        backToHomeFromProfileBtn.addEventListener('click', () => {
+            document.querySelectorAll('section').forEach(section => section.style.display = 'block');
+            profileSection.style.display = 'none';
+        });
+    }
+
+    async function checkUserSession() {
+        try {
+            const response = await fetch('/api/user');
+            if (response.ok) {
+                const data = await response.json();
+                hederaAccountId = data.hederaAccountId;
+                connectWalletBtn.style.display = 'none';
+                viewProfileBtn.style.display = 'block';
+                disconnectWalletBtn.style.display = 'block';
+                if (data.needsSignup) {
+                    document.querySelectorAll('section').forEach(section => section.style.display = 'none');
+                    signupSection.style.display = 'block';
+                }
+            }
+        } catch (error) {
+            console.error('Error checking user session:', error);
+        }
+    }
+
+    async function showProfile(user) {
+        document.querySelectorAll('section').forEach(section => section.style.display = 'none');
+        profileSection.style.display = 'block';
+
+        document.getElementById('profile-hedera-account').textContent = user.hederaAccountId.slice(0, 6) + '...';
+        document.getElementById('profile-x-username').textContent = user.xUsername || 'Not linked';
+        document.getElementById('profile-slo-mo-points').textContent = user.sloMoPoints || 0;
+
+        // Fetch leaderboard to determine rank
+        const leaderboardResponse = await fetch('/api/leaderboard');
+        const leaderboard = await leaderboardResponse.json();
+        const userRank = leaderboard.findIndex(entry => entry.xUsername === user.xUsername) + 1;
+        document.getElementById('profile-leaderboard-rank').textContent = userRank > 0 ? userRank : 'Not ranked';
+    }
+
+    async function fetchLeaderboard() {
+        try {
+            const response = await fetch('/api/leaderboard');
+            const leaderboard = await response.json();
+            const leaderboardBody = document.getElementById('leaderboard-body');
+            leaderboardBody.innerHTML = '';
+
+            leaderboard.forEach((entry, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${entry.xUsername}</td>
+                    <td>${entry.sloMoPoints}</td>
+                `;
+                leaderboardBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error fetching leaderboard:', error);
+        }
+    }
+});
