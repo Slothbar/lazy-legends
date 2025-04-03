@@ -27,13 +27,15 @@ const lastChecked = {};
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
 console.log('ADMIN_PASSWORD loaded:', ADMIN_PASSWORD);
 
-async function appendToGoogleSheet(xUsername) {
+async function appendToGoogleSheet(xUsername, hederaWallet) {
     const timestamp = new Date().toISOString();
-    const values = [[xUsername, timestamp]];
+    // Mask the wallet address for privacy (show only first 6 characters)
+    const maskedWallet = hederaWallet !== 'N/A' ? hederaWallet.slice(0, 6) + '...' : 'N/A';
+    const values = [[xUsername, maskedWallet, timestamp]];
     try {
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!A:B',
+            range: 'Sheet1!A:C',
             valueInputOption: 'RAW',
             resource: { values },
         });
@@ -44,7 +46,7 @@ async function appendToGoogleSheet(xUsername) {
 }
 
 app.post('/api/profile', (req, res) => {
-    const { xUsername } = req.body;
+    const { xUsername, hederaWallet } = req.body;
 
     // Validate X username
     const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
@@ -52,12 +54,15 @@ app.post('/api/profile', (req, res) => {
         return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
     }
 
+    // Add 5 bonus SloMo Points if wallet address is provided
+    const bonusPoints = hederaWallet !== 'N/A' ? 5 : 0;
+
     db.run(
-        `INSERT INTO users (xUsername) VALUES (?) ON CONFLICT(xUsername) DO NOTHING`,
-        [xUsername],
+        `INSERT INTO users (xUsername, hederaWallet, sloMoPoints) VALUES (?, ?, ?) ON CONFLICT(xUsername) DO UPDATE SET hederaWallet = ?, sloMoPoints = sloMoPoints + ?`,
+        [xUsername, hederaWallet, bonusPoints, hederaWallet, bonusPoints],
         async (err) => {
             if (err) return res.status(500).json({ error: 'Database error' });
-            await appendToGoogleSheet(xUsername);
+            await appendToGoogleSheet(xUsername, hederaWallet);
             res.status(200).json({ message: 'Profile saved' });
         }
     );
@@ -83,6 +88,18 @@ app.post('/api/admin/verify-password', (req, res) => {
     }
 
     res.status(200).json({ message: 'Password verified' });
+});
+
+// Admin endpoint to get all users
+app.get('/api/admin/users', (req, res) => {
+    db.all(
+        `SELECT xUsername, hederaWallet, sloMoPoints FROM users`,
+        [],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: 'Database error' });
+            res.json(rows);
+        }
+    );
 });
 
 // Admin endpoint to delete a user
