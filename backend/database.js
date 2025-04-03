@@ -5,6 +5,7 @@ db.serialize(() => {
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
             xUsername TEXT PRIMARY KEY,
+            hederaWallet TEXT,
             sloMoPoints INTEGER DEFAULT 0
         )
     `);
