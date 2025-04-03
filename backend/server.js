@@ -2,21 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const { google } = require('googleapis');
-const session = require('express-session');
 const db = require('./database.js');
 const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// Set up session management
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-session-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production' }
-}));
 
 app.use(express.static(path.join(__dirname, '../frontend')));
 
@@ -32,84 +23,23 @@ const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
 const lastChecked = {};
 
-async function appendToGoogleSheet(hederaAccountId, xUsername) {
+async function appendToGoogleSheet(xUsername) {
     const timestamp = new Date().toISOString();
-    const values = [[hederaAccountId, xUsername, timestamp]];
+    const values = [[xUsername, timestamp]];
     try {
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!A:C',
+            range: 'Sheet1!A:B',
             valueInputOption: 'RAW',
             resource: { values },
         });
-        console.log(`Appended ${hederaAccountId} to Google Sheet`);
+        console.log(`Appended ${xUsername} to Google Sheet`);
     } catch (error) {
         console.error('Error appending to Google Sheet:', error);
     }
 }
 
-// Endpoint to get WalletConnect project ID
-app.get('/api/walletconnect-config', (req, res) => {
-    res.json({ projectId: process.env.WALLET_CONNECT_PROJECT_ID || 'your-walletconnect-project-id' });
-});
-
-// Endpoint to check if user is authenticated and get their data
-app.get('/api/user', (req, res) => {
-    if (req.session.hederaAccountId) {
-        db.get(
-            `SELECT hederaAccountId, xUsername, sloMoPoints FROM users WHERE hederaAccountId = ?`,
-            [req.session.hederaAccountId],
-            (err, row) => {
-                if (err) return res.status(500).json({ error: 'Database error' });
-                if (!row) return res.status(404).json({ error: 'User not found' });
-                res.json(row);
-            }
-        );
-    } else {
-        res.status(401).json({ error: 'Not authenticated' });
-    }
-});
-
-// Endpoint to log in with wallet (called after WalletConnect connection)
-app.post('/api/login', (req, res) => {
-    const { hederaAccountId } = req.body;
-
-    if (!hederaAccountId || !hederaAccountId.startsWith('0.0')) {
-        return res.status(400).json({ error: 'Invalid Hedera account ID' });
-    }
-
-    // Store the Hedera account ID in the session
-    req.session.hederaAccountId = hederaAccountId;
-
-    // Check if the user exists in the database
-    db.get(
-        `SELECT hederaAccountId, xUsername FROM users WHERE hederaAccountId = ?`,
-        [hederaAccountId],
-        (err, row) => {
-            if (err) return res.status(500).json({ error: 'Database error' });
-            if (row) {
-                res.json({ user: row, needsSignup: !row.xUsername });
-            } else {
-                // New user, needs to sign up
-                db.run(
-                    `INSERT INTO users (hederaAccountId) VALUES (?)`,
-                    [hederaAccountId],
-                    (err) => {
-                        if (err) return res.status(500).json({ error: 'Database error' });
-                        res.json({ user: { hederaAccountId }, needsSignup: true });
-                    }
-                );
-            }
-        }
-    );
-});
-
-// Endpoint to sign up (link X account)
-app.post('/api/signup', (req, res) => {
-    if (!req.session.hederaAccountId) {
-        return res.status(401).json({ error: 'Not authenticated' });
-    }
-
+app.post('/api/profile', (req, res) => {
     const { xUsername } = req.body;
 
     // Validate X username
@@ -118,29 +48,20 @@ app.post('/api/signup', (req, res) => {
         return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
     }
 
-    // Update the user's record with the X username
     db.run(
-        `UPDATE users SET xUsername = ? WHERE hederaAccountId = ?`,
-        [xUsername, req.session.hederaAccountId],
+        `INSERT INTO users (xUsername) VALUES (?) ON CONFLICT(xUsername) DO NOTHING`,
+        [xUsername],
         async (err) => {
             if (err) return res.status(500).json({ error: 'Database error' });
-            await appendToGoogleSheet(req.session.hederaAccountId, xUsername);
-            res.status(200).json({ message: 'X account linked successfully' });
+            await appendToGoogleSheet(xUsername);
+            res.status(200).json({ message: 'Profile saved' });
         }
     );
 });
 
-// Endpoint to disconnect wallet (logout)
-app.post('/api/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) return res.status(500).json({ error: 'Failed to log out' });
-        res.status(200).json({ message: 'Logged out successfully' });
-    });
-});
-
 app.get('/api/leaderboard', (req, res) => {
     db.all(
-        `SELECT xUsername, sloMoPoints FROM users WHERE xUsername IS NOT NULL ORDER BY sloMoPoints DESC LIMIT 10`,
+        `SELECT xUsername, sloMoPoints FROM users ORDER BY sloMoPoints DESC LIMIT 10`,
         [],
         (err, rows) => {
             if (err) return res.status(500).json({ error: 'Database error' });
@@ -166,7 +87,7 @@ app.post('/api/admin/delete-user', (req, res) => {
 
     // Check if the user exists
     db.get(
-        `SELECT hederaAccountId FROM users WHERE xUsername = ?`,
+        `SELECT xUsername FROM users WHERE xUsername = ?`,
         [xUsername],
         (err, row) => {
             if (err) {
@@ -205,7 +126,7 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
     }
 
     // Log the current users before deletion
-    db.all(`SELECT hederaAccountId, xUsername FROM users`, [], (err, rows) => {
+    db.all(`SELECT xUsername FROM users`, [], (err, rows) => {
         if (err) {
             console.error('Error fetching users before clearing:', err);
             return res.status(500).json({ error: 'Database error' });
@@ -223,7 +144,7 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
                 console.log('Cleared invalid users from the leaderboard');
 
                 // Log the remaining users after deletion
-                db.all(`SELECT hederaAccountId, xUsername FROM users`, [], (err, remainingRows) => {
+                db.all(`SELECT xUsername FROM users`, [], (err, remainingRows) => {
                     if (err) {
                         console.error('Error fetching users after clearing:', err);
                         return res.status(500).json({ error: 'Database error' });
@@ -247,7 +168,7 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
     }
 
     // Log the current users before deletion
-    db.all(`SELECT hederaAccountId, xUsername FROM users`, [], (err, rows) => {
+    db.all(`SELECT xUsername FROM users`, [], (err, rows) => {
         if (err) {
             console.error('Error fetching users before resetting:', err);
             return res.status(500).json({ error: 'Database error' });
@@ -265,7 +186,7 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
                 console.log('Reset the entire leaderboard');
 
                 // Verify the table is empty
-                db.all(`SELECT hederaAccountId, xUsername FROM users`, [], (err, remainingRows) => {
+                db.all(`SELECT xUsername FROM users`, [], (err, remainingRows) => {
                     if (err) {
                         console.error('Error fetching users after resetting:', err);
                         return res.status(500).json({ error: 'Database error' });
@@ -281,7 +202,7 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
 async function trackLazyLegendsPosts() {
     setInterval(async () => {
         console.log('Checking for #LazyLegends posts now...');
-        db.all(`SELECT hederaAccountId, xUsername FROM users WHERE xUsername IS NOT NULL`, [], async (err, rows) => {
+        db.all(`SELECT xUsername FROM users WHERE xUsername IS NOT NULL`, [], async (err, rows) => {
             if (err) return console.error(err);
 
             if (!rows || rows.length === 0) {
@@ -292,7 +213,7 @@ async function trackLazyLegendsPosts() {
             console.log(`Found ${rows.length} users to check.`);
 
             for (const row of rows) {
-                const lastTime = lastChecked[row.hederaAccountId] || 0;
+                const lastTime = lastChecked[row.xUsername] || 0;
                 const now = Date.now();
                 if (now - lastTime < 1800000) {
                     console.log(`Skipping ${row.xUsername} - last checked at ${new Date(lastTime).toISOString()}`);
@@ -319,8 +240,8 @@ async function trackLazyLegendsPosts() {
                     const pointsToAdd = newTweets.length * 2;
                     if (pointsToAdd > 0) {
                         db.run(
-                            `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE hederaAccountId = ?`,
-                            [pointsToAdd, row.hederaAccountId],
+                            `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE xUsername = ?`,
+                            [pointsToAdd, row.xUsername],
                             (err) => {
                                 if (err) console.error(err);
                                 console.log(`${row.xUsername} earned ${pointsToAdd} SloMo Points`);
@@ -329,7 +250,7 @@ async function trackLazyLegendsPosts() {
                     } else {
                         console.log(`No new #LazyLegends tweets found for ${row.xUsername}`);
                     }
-                    lastChecked[row.hederaAccountId] = now;
+                    lastChecked[row.xUsername] = now;
                 } catch (error) {
                     console.error(`Error fetching tweets for ${row.xUsername}:`, error.response?.data || error.message);
                     if (error.response?.status === 429) {
