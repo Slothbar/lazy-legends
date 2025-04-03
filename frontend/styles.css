@@ -111,6 +111,21 @@ h3 {
     gap: 10px;
 }
 
+#profile-section .field-info {
+    font-size: 0.9em;
+    color: #4a7c59;
+    line-height: 1.4;
+}
+
+#profile-section .field-info a {
+    color: #1da1f2;
+    text-decoration: none;
+}
+
+#profile-section .field-info a:hover {
+    text-decoration: underline;
+}
+
 #profile-section .tooltip {
     display: none;
     position: absolute;
