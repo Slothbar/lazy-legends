@@ -6,8 +6,6 @@
     <title>Lazy Legends - Slothbar Memecoin Game</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <!-- WalletConnect Universal Provider -->
-    <script src="https://unpkg.com/@walletconnect/universal-provider@2.9.0/dist/index.umd.js"></script>
 </head>
 <body>
     <div class="container">
@@ -26,59 +24,38 @@
         <header>
             <a href="https://imgbb.com/"><img src="https://i.ibb.co/tpZNQFTz/Copy-of-Copy-of-Untitled-200-x-200-px-350-x-350-px-200-x-200-px.png" alt="Copy-of-Copy-of-Untitled-200-x-200-px-350-x-350-px-200-x-200-px" border="0"></a>
             <h1>Lazy Legends</h1>
-            <p>Play2Earn Game by Slothbar Memecoin. Powered by Hedera Hashgraph.</p>
             <p>Chill, Post, Earn $SLOTH with #LazyLegends</p>
         </header>
-        <!-- Wallet Connect Section -->
-        <section id="wallet-connect-section">
-            <h2>Welcome to Lazy Legends</h2>
-            <div id="connect-wallet-group">
-                <button id="connect-wallet-btn">Connect Wallet</button>
-            </div>
-            <div id="authenticated-group" style="display: none;">
-                <button id="view-profile-btn">View Profile</button>
-                <button id="disconnect-wallet-btn">Disconnect Wallet</button>
-            </div>
-        </section>
 
-        <!-- Signup Section (for linking X account after wallet login) -->
-        <section id="signup-section" style="display: none;">
-            <h2>Complete Your Signup</h2>
-            <p>Please link your X account to start playing!</p>
-            <form id="signup-form">
+        <section id="profile-section">
+            <h2>Link Your Profile</h2>
+            <div class="profile-header">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/57/X_logo_2023.svg" alt="X Logo" class="x-logo">
+                <p>Connect your X account to join the fun!</p>
+            </div>
+            <form id="profile-form">
                 <div class="input-group">
-                    <input type="text" id="signup-x-username" placeholder="Your X Username (e.g., @LazySloth)" required>
+                    <input type="text" id="x-username" placeholder="Your X Username (e.g., @LazySloth)" required>
                 </div>
-                <button type="submit">Link X Account</button>
+                <button type="submit">Link Profile</button>
             </form>
         </section>
 
-        <!-- Profile Section -->
-        <section id="profile-section" style="display: none;">
-            <h2>Your Sloth Profile 🦥</h2>
-            <div id="profile-details">
-                <p><strong>Hedera Account:</strong> <span id="profile-hedera-account"></span></p>
-                <p><strong>X Username:</strong> <span id="profile-x-username"></span></p>
-                <p><strong>SloMo Points:</strong> <span id="profile-slo-mo-points"></span></p>
-                <p><strong>Leaderboard Rank:</strong> <span id="profile-leaderboard-rank"></span></p>
-            </div>
-            <button id="back-to-home-from-profile-btn">Back to Home</button>
-        </section>
-        
         <section id="how-to-play-section">
-            <center><h2>How to Play Lazy Legends</h2></center>
+            <h2>How to Play Lazy Legends</h2>
             <p>Join the Chill2Earn fun and earn $SLOTH—here’s how:</p>
             <ol>
-                <li><strong>Start:</strong> <b>Hold</b> $SLOTH tokens or add liquidity to a $SLOTH pool.</li>
-                <li><strong>Link Up:</strong> Connect your X username and Hedera wallet above.</li>
-                <li><strong>Chill Hunt:</strong> Find chill X posts (a night on the town, hanging with the fam, etc).</li>
-                <li><strong>Slothify:</strong> Reply with a fun message or meme.<b>Remember to include #LazyLegends in your post!</b></li>
+                <li><strong>Start:</strong> Hold $SLOTH tokens or add liquidity to a $SLOTH pool.</li>
+                <li><strong>Link Up:</strong> Connect your X username above.</li>
+                <li><strong>Chill Hunt:</strong> Find chill X posts (no crypto stuff).</li>
+                <li><strong>Slothify:</strong> Reply with a fun #LazyLegends message or meme.</li>
+                <li><strong>Bonus:</strong> Add a sloth GIF or pic for extra vibes.</li>
                 <li><strong>Score:</strong> Earn 2 SloMo Points per post—check the leaderboard!</li>
-                <li><strong>Win:</strong> Top three players get $SLOTH tokens dropped to their wallet.</li>
+                <li><strong>Win:</strong> Top players get $SLOTH, NFTs, or perks every season (2-4 weeks).</li>
             </ol>
             <p>Spread sloth vibes and climb the ranks!</p>
         </section>
-        
+
         <!-- Admin Panel Section -->
         <section id="admin-panel" style="display: none;">
             <h2>Admin Panel 🦥</h2>
@@ -94,9 +71,9 @@
                 <button id="back-to-home-btn">Back to Home</button>
             </div>
         </section>
-        
+
         <section id="leaderboard-section">
-            <center><h2>🏆Leaderboard - SloMo Points</h2></center>
+            <h2>Leaderboard - SloMo Points</h2>
             <table id="leaderboard">
                 <thead>
                     <tr>
