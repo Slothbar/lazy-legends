@@ -34,16 +34,18 @@
             </div>
             <form id="profile-form-step1">
                 <div class="input-group">
+                    <p class="field-info">We use your X username to track your #LazyLegends posts for SloMo Points.</p>
                     <input type="text" id="x-username" placeholder="Your X Username (e.g., @LazySloth)" required>
-                    <span class="tooltip">Your X username is used to track your #LazyLegends posts. It must start with @.</span>
+                    <span class="tooltip">Your X username must start with @ and contain only letters, numbers, or underscores.</span>
                 </div>
                 <button type="submit">Next</button>
             </form>
             <form id="profile-form-step2" style="display: none;">
                 <div class="input-group">
                     <p>Step 2: (Optional) Add your Hedera wallet address to be eligible for season rewards and get 5 bonus SloMo Points!</p>
+                    <p class="field-info">We use your wallet address to track season winners and distribute rewards. It’s securely stored and does not grant us access to your wallet. <a href="/privacy-policy" target="_blank">Learn more</a>.</p>
                     <input type="text" id="hedera-wallet" placeholder="Hedera Wallet Address (e.g., 0.0.12345)">
-                    <span class="tooltip">We use your wallet address to track season winners and distribute rewards. It’s securely stored and does not grant us access to your wallet. <a href="/privacy-policy" target="_blank">Learn more</a>.</span>
+                    <span class="tooltip">Wallet address must start with 0.0. followed by numbers. Skip if you’re not ready to share.</span>
                     <span class="security-note">🔒 This form is secured with HTTPS encryption.</span>
                 </div>
                 <div class="form-buttons">
