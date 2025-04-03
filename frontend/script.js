@@ -34,16 +34,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (adminLoginBtn) {
-        adminLoginBtn.addEventListener('click', () => {
+        adminLoginBtn.addEventListener('click', async () => {
             const password = adminPasswordInput.value;
-            const ADMIN_PASSWORD = 'your-secret-password'; // This will be removed after testing
 
-            if (password === ADMIN_PASSWORD) {
-                adminLogin.style.display = 'none';
-                adminControls.style.display = 'block';
-                adminPasswordInput.dataset.password = password;
-            } else {
-                alert('Invalid admin password. Please try again.');
+            try {
+                const response = await fetch('/api/admin/verify-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminPassword: password })
+                });
+
+                if (response.ok) {
+                    adminLogin.style.display = 'none';
+                    adminControls.style.display = 'block';
+                    adminPasswordInput.dataset.password = password;
+                } else {
+                    const errorData = await response.json();
+                    alert(errorData.error || 'Invalid admin password. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error verifying admin password:', error);
+                alert('Error verifying admin password. Check the console for details.');
             }
         });
     }
