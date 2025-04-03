@@ -12,18 +12,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // Check if UniversalProvider is available
+    console.log('UniversalProvider:', window.UniversalProvider);
+
     // Initialize WalletConnect Universal Provider
     let provider;
     try {
-        provider = await window.WalletConnectProvider.init({
+        provider = await window.UniversalProvider.init({
             projectId: walletConnectProjectId,
             metadata: {
                 name: 'Lazy Legends',
                 description: 'A Chill2Earn game on Hedera',
                 url: 'https://lazylegendscoin.com',
                 icons: ['https://lazylegendscoin.com/icon.png']
-            },
-            showQrModal: true // Automatically show the QR code modal
+            }
         });
         console.log('WalletConnect Universal Provider initialized:', provider);
     } catch (error) {
