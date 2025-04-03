@@ -20,25 +20,45 @@
                 <a href="#" id="admin-link">Admin Panel</a>
             </div>
         </div>
-    <div class="container">
+
         <header>
-            <a href="https://imgbb.com/"><img src="https://i.ibb.co/tpZNQFTz/Copy-of-Copy-of-Untitled-200-x-200-px-350-x-350-px-200-x-200-px.png" alt="Copy-of-Copy-of-Untitled-200-x-200-px-350-x-350-px-200-x-200-px" border="0"></a>
             <h1>Lazy Legends</h1>
             <p>Chill, Post, Earn $SLOTH with #LazyLegends</p>
         </header>
 
         <section id="profile-section">
-            <h2>Link Your Profile</h2>
+            <h2>Join the Sloth Squad in 2 Easy Steps! 🦥</h2>
             <div class="profile-header">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/5/57/X_logo_2023.svg" alt="X Logo" class="x-logo">
-                <p>Connect your X account to join the fun!</p>
+                <p>Step 1: Link your X profile to join the fun!</p>
             </div>
-            <form id="profile-form">
+            <form id="profile-form-step1">
                 <div class="input-group">
                     <input type="text" id="x-username" placeholder="Your X Username (e.g., @LazySloth)" required>
+                    <span class="tooltip">Your X username is used to track your #LazyLegends posts. It must start with @.</span>
                 </div>
-                <button type="submit">Link Profile</button>
+                <button type="submit">Next</button>
             </form>
+            <form id="profile-form-step2" style="display: none;">
+                <div class="input-group">
+                    <p>Step 2: (Optional) Add your Hedera wallet address to be eligible for season rewards and get 5 bonus SloMo Points!</p>
+                    <input type="text" id="hedera-wallet" placeholder="Hedera Wallet Address (e.g., 0.0.12345)">
+                    <span class="tooltip">We use your wallet address to track season winners and distribute rewards. It’s securely stored and does not grant us access to your wallet. <a href="/privacy-policy" target="_blank">Learn more</a>.</span>
+                    <span class="security-note">🔒 This form is secured with HTTPS encryption.</span>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" id="submit-profile-btn">Submit</button>
+                    <button type="button" id="skip-wallet-btn">Skip</button>
+                </div>
+            </form>
+            <div id="form-feedback" style="display: none;"></div>
+        </section>
+
+        <section id="next-steps-section" style="display: none;">
+            <h2>Next Steps 🦥</h2>
+            <p>Now that you’re linked, post a tweet with #LazyLegends to earn 2 SloMo Points!</p>
+            <p>Need inspiration? Try a chill message like: "Just napping like a sloth on a sunny day! #LazyLegends"</p>
+            <button id="tweet-now-btn">Tweet Now</button>
         </section>
 
         <section id="how-to-play-section">
@@ -46,7 +66,7 @@
             <p>Join the Chill2Earn fun and earn $SLOTH—here’s how:</p>
             <ol>
                 <li><strong>Start:</strong> Hold $SLOTH tokens or add liquidity to a $SLOTH pool.</li>
-                <li><strong>Link Up:</strong> Connect your X username above.</li>
+                <li><strong>Link Up:</strong> Connect your X username above (and optionally your wallet address for season rewards).</li>
                 <li><strong>Chill Hunt:</strong> Find chill X posts (no crypto stuff).</li>
                 <li><strong>Slothify:</strong> Reply with a fun #LazyLegends message or meme.</li>
                 <li><strong>Bonus:</strong> Add a sloth GIF or pic for extra vibes.</li>
@@ -68,7 +88,22 @@
                 <p>Admin controls:</p>
                 <button id="clear-invalid-users-btn">Clear Invalid Users</button>
                 <button id="reset-leaderboard-btn">Reset Leaderboard</button>
+                <button id="view-all-users-btn">View All Users</button>
                 <button id="back-to-home-btn">Back to Home</button>
+            </div>
+            <div id="admin-users" style="display: none;">
+                <h3>All Users</h3>
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th>X Username</th>
+                            <th>Hedera Wallet</th>
+                            <th>SloMo Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body"></tbody>
+                </table>
+                <button id="back-to-controls-btn">Back to Controls</button>
             </div>
         </section>
 
