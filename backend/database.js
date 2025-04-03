@@ -4,8 +4,7 @@ const db = new sqlite3.Database('/app/data/lazy-legends.db');
 db.serialize(() => {
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
-            hederaAccountId TEXT PRIMARY KEY,
-            xUsername TEXT,
+            xUsername TEXT PRIMARY KEY,
             sloMoPoints INTEGER DEFAULT 0
         )
     `);
