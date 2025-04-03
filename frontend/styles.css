@@ -70,6 +70,13 @@ h2 {
     font-weight: 600;
 }
 
+h3 {
+    color: #4a7c59;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
 #profile-section .profile-header {
     display: flex;
     align-items: center;
@@ -98,9 +105,70 @@ h2 {
 }
 
 #profile-section .input-group {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+#profile-section .tooltip {
+    display: none;
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #4a7c59;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+#profile-section .input-group:hover .tooltip {
+    display: block;
+}
+
+#profile-section .security-note {
+    font-size: 0.9em;
+    color: #4a7c59;
+    margin-top: 5px;
+}
+
+#profile-section .form-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+#profile-section #skip-wallet-btn {
+    background: linear-gradient(90deg, #d9534f, #c9302c);
+}
+
+#profile-section #skip-wallet-btn:hover {
+    background: linear-gradient(90deg, #c9302c, #b52b27);
+}
+
+#form-feedback {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 1em;
+    color: #4a7c59;
+}
+
+#next-steps-section p {
+    font-size: 1em;
+    color: #4a7c59;
+    margin-bottom: 10px;
+}
+
+#next-steps-section #tweet-now-btn {
+    background: linear-gradient(90deg, #1da1f2, #0d8bf2);
+}
+
+#next-steps-section #tweet-now-btn:hover {
+    background: linear-gradient(90deg, #0d8bf2, #0a7bd2);
 }
 
 input {
@@ -270,7 +338,7 @@ footer {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
-#admin-login, #admin-controls {
+#admin-login, #admin-controls, #admin-users {
     text-align: center;
 }
 
@@ -291,7 +359,7 @@ footer {
     box-shadow: 0 0 5px rgba(74, 124, 89, 0.5);
 }
 
-#admin-login-btn, #clear-invalid-users-btn, #reset-leaderboard-btn, #back-to-home-btn {
+#admin-login-btn, #clear-invalid-users-btn, #reset-leaderboard-btn, #view-all-users-btn, #back-to-home-btn, #back-to-controls-btn {
     padding: 10px 20px;
     background: linear-gradient(90deg, #4a7c59, #6b9e78);
     color: white;
@@ -304,7 +372,7 @@ footer {
     z-index: 10; /* Ensure the button is clickable */
 }
 
-#admin-login-btn:hover, #clear-invalid-users-btn:hover, #reset-leaderboard-btn:hover, #back-to-home-btn:hover {
+#admin-login-btn:hover, #clear-invalid-users-btn:hover, #reset-leaderboard-btn:hover, #view-all-users-btn:hover, #back-to-home-btn:hover, #back-to-controls-btn:hover {
     background: linear-gradient(90deg, #6b9e78, #8ab89a);
     transform: scale(1.05);
 }
@@ -343,5 +411,13 @@ footer {
     #profile-section .profile-header {
         flex-direction: column;
         gap: 10px;
+    }
+    #profile-section .tooltip {
+        top: -60px;
+        font-size: 0.8em;
+    }
+    #profile-section .form-buttons {
+        flex-direction: column;
+        gap: 5px;
     }
 }
