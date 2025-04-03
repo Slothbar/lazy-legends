@@ -23,6 +23,10 @@ const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
 const lastChecked = {};
 
+// Debug log to confirm ADMIN_PASSWORD value
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
+console.log('ADMIN_PASSWORD loaded:', ADMIN_PASSWORD);
+
 async function appendToGoogleSheet(xUsername) {
     const timestamp = new Date().toISOString();
     const values = [[xUsername, timestamp]];
@@ -75,7 +79,6 @@ app.post('/api/admin/delete-user', (req, res) => {
     const { xUsername, adminPassword } = req.body;
 
     // Simple password check
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'slothadmin123';
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
@@ -120,7 +123,6 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
     const { adminPassword } = req.body;
 
     // Simple password check
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
@@ -162,7 +164,6 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
     const { adminPassword } = req.body;
 
     // Simple password check
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
