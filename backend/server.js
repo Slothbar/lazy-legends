@@ -176,4 +176,108 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
 
     // Simple password check
     if (adminPassword !== ADMIN_PASSWORD) {
-        return res.status(403).json({ error: 'Unauthorized
+        return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
+    }
+
+    // Log the current users before deletion
+    db.all(`SELECT xUsername FROM users`, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching users before resetting:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        console.log('Users before resetting:', rows);
+
+        // Delete all users from the database
+        db.run(
+            `DELETE FROM users`,
+            (err) => {
+                if (err) {
+                    console.error('Error resetting leaderboard:', err);
+                    return res.status(500).json({ error: 'Database error' });
+                }
+                console.log('Reset the entire leaderboard');
+
+                // Verify the table is empty
+                db.all(`SELECT xUsername FROM users`, [], (err, remainingRows) => {
+                    if (err) {
+                        console.error('Error fetching users after resetting:', err);
+                        return res.status(500).json({ error: 'Database error' });
+                    }
+                    console.log('Users after resetting:', remainingRows);
+                    res.status(200).json({ message: 'Successfully reset the leaderboard' });
+                });
+            }
+        );
+    });
+});
+
+async function trackLazyLegendsPosts() {
+    setInterval(async () => {
+        console.log('Checking for #LazyLegends posts now...');
+        db.all(`SELECT xUsername FROM users WHERE xUsername IS NOT NULL`, [], async (err, rows) => {
+            if (err) return console.error(err);
+
+            if (!rows || rows.length === 0) {
+                console.log('No users to check for #LazyLegends posts.');
+                return;
+            }
+
+            console.log(`Found ${rows.length} users to check.`);
+
+            for (const row of rows) {
+                const lastTime = lastChecked[row.xUsername] || 0;
+                const now = Date.now();
+                if (now - lastTime < 1800000) {
+                    console.log(`Skipping ${row.xUsername} - last checked at ${new Date(lastTime).toISOString()}`);
+                    continue;
+                }
+
+                console.log(`Checking tweets for ${row.xUsername}...`);
+                try {
+                    const response = await axios.get('https://api.twitter.com/2/tweets/search/recent', {
+                        headers: { Authorization: `Bearer ${X_BEARER_TOKEN}` },
+                        params: {
+                            query: `#LazyLegends from:${row.xUsername.replace('@', '')}`,
+                            max_results: 10,
+                            'tweet.fields': 'created_at'
+                        }
+                    });
+
+                    const tweets = response.data.data || [];
+                    const newTweets = tweets.filter(tweet => {
+                        const tweetTime = new Date(tweet.created_at).getTime();
+                        return tweetTime > lastTime;
+                    });
+
+                    const pointsToAdd = newTweets.length * 2;
+                    if (pointsToAdd > 0) {
+                        db.run(
+                            `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE xUsername = ?`,
+                            [pointsToAdd, row.xUsername],
+                            (err) => {
+                                if (err) console.error(err);
+                                console.log(`${row.xUsername} earned ${pointsToAdd} SloMo Points`);
+                            }
+                        );
+                    } else {
+                        console.log(`No new #LazyLegends tweets found for ${row.xUsername}`);
+                    }
+                    lastChecked[row.xUsername] = now;
+                } catch (error) {
+                    console.error(`Error fetching tweets for ${row.xUsername}:`, error.response?.data || error.message);
+                    if (error.response?.status === 429) {
+                        console.log('Hit 429 limit, waiting 5 minutes...');
+                        await new Promise(resolve => setTimeout(resolve, 300000));
+                    }
+                }
+                await new Promise(resolve => setTimeout(resolve, 30000));
+            }
+        });
+    }, 1800000);
+}
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    trackLazyLegendsPosts();
+});
