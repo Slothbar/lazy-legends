@@ -18,11 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminPanel = document.getElementById('admin-panel');
     const adminLogin = document.getElementById('admin-login');
     const adminControls = document.getElementById('admin-controls');
+    const adminUsers = document.getElementById('admin-users');
     const adminPasswordInput = document.getElementById('admin-password');
     const adminLoginBtn = document.getElementById('admin-login-btn');
     const backToHomeBtn = document.getElementById('back-to-home-btn');
     const clearInvalidUsersBtn = document.getElementById('clear-invalid-users-btn');
     const resetLeaderboardBtn = document.getElementById('reset-leaderboard-btn');
+    const viewAllUsersBtn = document.getElementById('view-all-users-btn');
+    const backToControlsBtn = document.getElementById('back-to-controls-btn');
 
     if (adminLink) {
         adminLink.addEventListener('click', (e) => {
@@ -65,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminPanel.style.display = 'none';
             adminLogin.style.display = 'block';
             adminControls.style.display = 'none';
+            adminUsers.style.display = 'none';
             adminPasswordInput.value = '';
         });
     }
@@ -121,39 +125,156 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle profile form submission
-    const profileForm = document.getElementById('profile-form');
-    if (profileForm) {
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const xUsername = document.getElementById('x-username').value.trim();
+    if (viewAllUsersBtn) {
+        viewAllUsersBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/admin/users', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
 
-            // Validate X username (must start with @ and contain only letters, numbers, or underscores)
+                if (response.ok) {
+                    const users = await response.json();
+                    const usersTableBody = document.getElementById('users-table-body');
+                    usersTableBody.innerHTML = '';
+
+                    users.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${user.xUsername}</td>
+                            <td>${user.hederaWallet || 'N/A'}</td>
+                            <td>${user.sloMoPoints}</td>
+                        `;
+                        usersTableBody.appendChild(row);
+                    });
+
+                    adminControls.style.display = 'none';
+                    adminUsers.style.display = 'block';
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                alert('Error fetching users. Check the console for details.');
+            }
+        });
+    }
+
+    if (backToControlsBtn) {
+        backToControlsBtn.addEventListener('click', () => {
+            adminUsers.style.display = 'none';
+            adminControls.style.display = 'block';
+        });
+    }
+
+    // Handle profile form submission (Step 1: X Username)
+    const profileFormStep1 = document.getElementById('profile-form-step1');
+    const profileFormStep2 = document.getElementById('profile-form-step2');
+    const formFeedback = document.getElementById('form-feedback');
+    const nextStepsSection = document.getElementById('next-steps-section');
+    const profileSection = document.getElementById('profile-section');
+
+    if (profileFormStep1) {
+        profileFormStep1.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const xUsernameInput = document.getElementById('x-username');
+            let xUsername = xUsernameInput.value.trim();
+
+            // Auto-prepend @ if missing
+            if (!xUsername.startsWith('@')) {
+                xUsername = '@' + xUsername;
+                xUsernameInput.value = xUsername;
+            }
+
+            // Validate X username
             const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
             if (!xUsernameRegex.test(xUsername)) {
-                alert('Invalid X username! It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).');
+                formFeedback.style.display = 'block';
+                formFeedback.style.color = '#d9534f';
+                formFeedback.textContent = 'Invalid X username! It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).';
                 return;
+            }
+
+            // Move to Step 2
+            profileFormStep1.style.display = 'none';
+            profileFormStep2.style.display = 'block';
+            formFeedback.style.display = 'none';
+        });
+    }
+
+    // Handle profile form submission (Step 2: Wallet Address)
+    if (profileFormStep2) {
+        profileFormStep2.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const xUsername = document.getElementById('x-username').value.trim();
+            const hederaWallet = document.getElementById('hedera-wallet').value.trim();
+
+            // Validate wallet address if provided
+            let walletAddress = hederaWallet || 'N/A';
+            if (hederaWallet) {
+                const walletRegex = /^0\.0\.\d+$/;
+                if (!walletRegex.test(hederaWallet)) {
+                    formFeedback.style.display = 'block';
+                    formFeedback.style.color = '#d9534f';
+                    formFeedback.textContent = 'Invalid Hedera wallet address! It must start with 0.0. followed by numbers (e.g., 0.0.12345).';
+                    return;
+                }
+                walletAddress = hederaWallet;
             }
 
             try {
                 const response = await fetch('/api/profile', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ xUsername })
+                    body: JSON.stringify({ xUsername, hederaWallet: walletAddress })
                 });
 
                 if (response.ok) {
-                    alert('Profile saved successfully!');
-                    profileForm.reset();
+                    const bonusPoints = walletAddress !== 'N/A' ? 5 : 0;
+                    const feedbackMessage = walletAddress !== 'N/A'
+                        ? `Welcome ${xUsername}! You’ve earned 5 bonus SloMo Points for linking your wallet address. Start posting #LazyLegends to climb the leaderboard!`
+                        : `Welcome ${xUsername}! You’re ready to start posting #LazyLegends. Add your wallet address later to be eligible for season rewards!`;
+                    formFeedback.style.display = 'block';
+                    formFeedback.style.color = '#4a7c59';
+                    formFeedback.textContent = feedbackMessage;
+                    profileFormStep2.style.display = 'none';
+                    profileFormStep1.style.display = 'none';
+                    profileFormStep1.reset();
+                    profileFormStep2.reset();
+                    nextStepsSection.style.display = 'block';
                     fetchLeaderboard(); // Refresh leaderboard
                 } else {
                     const errorData = await response.json();
-                    alert(`Error saving profile: ${errorData.error || 'Unknown error'}`);
+                    formFeedback.style.display = 'block';
+                    formFeedback.style.color = '#d9534f';
+                    formFeedback.textContent = `Error saving profile: ${errorData.error || 'Unknown error'}`;
                 }
             } catch (error) {
                 console.error('Error submitting profile:', error);
-                alert('Error saving profile. Check the console for details.');
+                formFeedback.style.display = 'block';
+                formFeedback.style.color = '#d9534f';
+                formFeedback.textContent = 'Error saving profile. Check the console for details.';
             }
+        });
+    }
+
+    // Handle skipping the wallet address
+    const skipWalletBtn = document.getElementById('skip-wallet-btn');
+    if (skipWalletBtn) {
+        skipWalletBtn.addEventListener('click', () => {
+            document.getElementById('hedera-wallet').value = '';
+            profileFormStep2.dispatchEvent(new Event('submit'));
+        });
+    }
+
+    // Handle "Tweet Now" button
+    const tweetNowBtn = document.getElementById('tweet-now-btn');
+    if (tweetNowBtn) {
+        tweetNowBtn.addEventListener('click', () => {
+            const tweetText = encodeURIComponent('Just napping like a sloth on a sunny day! #LazyLegends');
+            const tweetUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
+            window.open(tweetUrl, '_blank');
         });
     }
 
