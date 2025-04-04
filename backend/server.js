@@ -12,6 +12,7 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname, '../frontend')));
 
+// Google Sheets authentication
 const auth = new google.auth.GoogleAuth({
     keyFile: './lazy-legends-credentials.json',
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
@@ -274,7 +275,7 @@ app.post('/api/admin/verify-password', (req, res) => {
     const { adminPassword } = req.body;
 
     if (adminPassword !== ADMIN_PASSWORD) {
-        return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
+        return res.status(403).json({ error: ' WUnauthorized: Invalid admin password' });
     }
 
     res.status(200).json({ message: 'Password verified' });
