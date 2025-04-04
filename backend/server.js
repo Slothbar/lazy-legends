@@ -17,7 +17,7 @@ const auth = new google.auth.GoogleAuth({
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '1SizgE0qHuB1JgTpOpifEdeJ_ABQEVaESHeFIdPGWeAQ';
 
 const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
@@ -98,6 +98,47 @@ app.get('/api/admin/users', (req, res) => {
         (err, rows) => {
             if (err) return res.status(500).json({ error: 'Database error' });
             res.json(rows);
+        }
+    );
+});
+
+// Admin endpoint to get the current announcement
+app.get('/api/admin/announcement', (req, res) => {
+    db.get(
+        `SELECT text FROM announcements WHERE id = 1`,
+        [],
+        (err, row) => {
+            if (err) return res.status(500).json({ error: 'Database error' });
+            if (!row) return res.status(404).json({ error: 'Announcement not found' });
+            res.json({ text: row.text });
+        }
+    );
+});
+
+// Admin endpoint to update the announcement
+app.post('/api/admin/update-announcement', (req, res) => {
+    const { adminPassword, text } = req.body;
+
+    // Simple password check
+    if (adminPassword !== ADMIN_PASSWORD) {
+        return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
+    }
+
+    // Validate announcement text
+    if (!text || text.trim().length === 0) {
+        return res.status(400).json({ error: 'Announcement text cannot be empty' });
+    }
+
+    db.run(
+        `INSERT OR REPLACE INTO announcements (id, text) VALUES (1, ?)`,
+        [text.trim()],
+        (err) => {
+            if (err) {
+                console.error('Error updating announcement:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            console.log('Updated announcement:', text);
+            res.status(200).json({ message: 'Announcement updated successfully' });
         }
     );
 });
