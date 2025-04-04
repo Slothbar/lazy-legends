@@ -19,11 +19,19 @@ db.serialize(() => {
         )
     `);
 
-    // New announcements table to store the announcement text
+    // Existing announcements table
     db.run(`
         CREATE TABLE IF NOT EXISTS announcements (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             text TEXT NOT NULL
+        )
+    `);
+
+    // New bonus_days table to store bonus day schedules
+    db.run(`
+        CREATE TABLE IF NOT EXISTS bonus_days (
+            date TEXT PRIMARY KEY, -- Date in YYYY-MM-DD format
+            multiplier INTEGER NOT NULL
         )
     `);
 
