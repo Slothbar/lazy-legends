@@ -4,6 +4,7 @@ const axios = require('axios');
 const { google } = require('googleapis');
 const db = require('./database.js');
 const path = require('path');
+const { Client, TokenTransferTransaction, AccountId, PrivateKey } = require('@hashgraph/sdk');
 
 const app = express();
 app.use(cors());
@@ -17,9 +18,17 @@ const auth = new google.auth.GoogleAuth({
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
-const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '1SizgE0qHuB1JgTpOpifEdeJ_ABQEVaESHeFIdPGWeAQ';
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
 
 const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
+
+// Hedera SDK setup
+const treasuryAccountId = process.env.TREASURY_ACCOUNT_ID || '0.0.<your-treasury-account-id>';
+const treasuryPrivateKey = process.env.TREASURY_PRIVATE_KEY || '<your-treasury-private-key>';
+const slothTokenId = process.env.SLOTH_TOKEN_ID || '0.0.<your-sloth-token-id>';
+
+const client = Client.forTestnet(); // Use .forMainnet() for production
+client.setOperator(AccountId.fromString(treasuryAccountId), PrivateKey.fromString(treasuryPrivateKey));
 
 const lastChecked = {};
 
@@ -30,7 +39,8 @@ console.log('ADMIN_PASSWORD loaded:', ADMIN_PASSWORD);
 async function appendToGoogleSheet(xUsername, hederaWallet) {
     const timestamp = new Date().toISOString();
     // Mask the wallet address for privacy (show only first 6 characters)
-    const maskedWallet = hederaWallet !== 'N/A' ? hederaWallet.slice(0, 6) + '...' : 'N/A';
+    const maskedWallet = hederaWallet !== 'N/A' ? hederaWallet.slice(0, 6) + '***' : 'N/A';
+    console.log(`Logging to Google Sheet - xUsername: ${xUsername}, maskedWallet: ${maskedWallet}, timestamp: ${timestamp}`);
     const values = [[xUsername, maskedWallet, timestamp]];
     try {
         await sheets.spreadsheets.values.append({
@@ -86,6 +96,177 @@ app.get('/api/bonus-day', (req, res) => {
     const isBonusDay = dayOfWeek === 0; // Sunday
     const multiplier = isBonusDay ? 2 : 1; // 2x on Sundays, 1x otherwise
     res.json({ isBonusDay, multiplier });
+});
+
+// Endpoint to get season winners and claim status
+app.get('/api/season-winners', (req, res) => {
+    // Get the current season (latest season)
+    db.get(
+        `SELECT id FROM seasons ORDER BY id DESC LIMIT 1`,
+        [],
+        (err, currentSeason) => {
+            if (err) return res.status(500).json({ error: 'Database error' });
+            if (!currentSeason) return res.status(404).json({ error: 'No seasons found' });
+
+            const currentSeasonId = currentSeason.id;
+
+            // Get the previous season (second-to-last season)
+            db.get(
+                `SELECT id FROM seasons WHERE id < ? ORDER BY id DESC LIMIT 1`,
+                [currentSeasonId],
+                (err, previousSeason) => {
+                    if (err) return res.status(500).json({ error: 'Database error' });
+                    if (!previousSeason) return res.status(404).json({ error: 'No previous season found' });
+
+                    const previousSeasonId = previousSeason.id;
+
+                    // Check if winners have already been recorded for the previous season
+                    db.get(
+                        `SELECT COUNT(*) as count FROM season_rewards WHERE seasonId = ?`,
+                        [previousSeasonId],
+                        (err, row) => {
+                            if (err) return res.status(500).json({ error: 'Database error' });
+
+                            if (row.count === 0) {
+                                // Winners not recorded yet, determine the top 3 from the previous season
+                                // Note: We don't have historical points, so we'll assume the current leaderboard reflects the end of the previous season
+                                // In a future improvement, we can store points at season end
+                                db.all(
+                                    `SELECT xUsername, sloMoPoints FROM users ORDER BY sloMoPoints DESC LIMIT 3`,
+                                    [],
+                                    (err, topPlayers) => {
+                                        if (err) return res.status(500).json({ error: 'Database error' });
+
+                                        // Define reward amounts
+                                        const rewards = [
+                                            { rank: 1, amount: 100 }, // 1st place: 100 $SLOTH
+                                            { rank: 2, amount: 50 },  // 2nd place: 50 $SLOTH
+                                            { rank: 3, amount: 25 }   // 3rd place: 25 $SLOTH
+                                        ];
+
+                                        // Insert the winners into season_rewards
+                                        const insertStmt = db.prepare(`
+                                            INSERT INTO season_rewards (seasonId, xUsername, rank, rewardAmount, claimed)
+                                            VALUES (?, ?, ?, ?, 0)
+                                        `);
+                                        topPlayers.forEach((player, index) => {
+                                            const reward = rewards[index];
+                                            if (reward) {
+                                                insertStmt.run(previousSeasonId, player.xUsername, reward.rank, reward.amount);
+                                            }
+                                        });
+                                        insertStmt.finalize();
+
+                                        // Fetch the winners with claim status
+                                        db.all(
+                                            `SELECT xUsername, rank, rewardAmount, claimed FROM season_rewards WHERE seasonId = ?`,
+                                            [previousSeasonId],
+                                            (err, winners) => {
+                                                if (err) return res.status(500).json({ error: 'Database error' });
+                                                res.json({ seasonId: previousSeasonId, winners });
+                                            }
+                                        );
+                                    }
+                                );
+                            } else {
+                                // Winners already recorded, fetch them with claim status
+                                db.all(
+                                    `SELECT xUsername, rank, rewardAmount, claimed FROM season_rewards WHERE seasonId = ?`,
+                                    [previousSeasonId],
+                                    (err, winners) => {
+                                        if (err) return res.status(500).json({ error: 'Database error' });
+                                        res.json({ seasonId: previousSeasonId, winners });
+                                    }
+                                );
+                            }
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+// Endpoint to claim rewards
+app.post('/api/claim-rewards', async (req, res) => {
+    const { xUsername } = req.body;
+
+    if (!xUsername) {
+        return res.status(400).json({ error: 'X username is required' });
+    }
+
+    // Get the current season
+    db.get(
+        `SELECT id FROM seasons ORDER BY id DESC LIMIT 1`,
+        [],
+        async (err, currentSeason) => {
+            if (err) return res.status(500).json({ error: 'Database error' });
+            if (!currentSeason) return res.status(404).json({ error: 'No seasons found' });
+
+            const currentSeasonId = currentSeason.id;
+
+            // Get the previous season
+            db.get(
+                `SELECT id FROM seasons WHERE id < ? ORDER BY id DESC LIMIT 1`,
+                [currentSeasonId],
+                async (err, previousSeason) => {
+                    if (err) return res.status(500).json({ error: 'Database error' });
+                    if (!previousSeason) return res.status(404).json({ error: 'No previous season found' });
+
+                    const previousSeasonId = previousSeason.id;
+
+                    // Check if the user is eligible to claim rewards
+                    db.get(
+                        `SELECT rank, rewardAmount, claimed, hederaWallet
+                         FROM season_rewards sr
+                         JOIN users u ON sr.xUsername = u.xUsername
+                         WHERE sr.seasonId = ? AND sr.xUsername = ?`,
+                        [previousSeasonId, xUsername],
+                        async (err, reward) => {
+                            if (err) return res.status(500).json({ error: 'Database error' });
+                            if (!reward) return res.status(403).json({ error: 'You are not eligible to claim rewards for this season' });
+                            if (reward.claimed) return res.status(403).json({ error: 'You have already claimed your rewards for this season' });
+                            if (!reward.hederaWallet || reward.hederaWallet === 'N/A') return res.status(403).json({ error: 'No wallet address provided. Please update your profile with a valid Hedera wallet address.' });
+
+                            // Perform the token transfer
+                            const rewardAmount = reward.rewardAmount;
+                            const recipientWallet = reward.hederaWallet;
+
+                            try {
+                                const transaction = new TokenTransferTransaction()
+                                    .addTokenTransfer(slothTokenId, treasuryAccountId, -rewardAmount) // Deduct from treasury
+                                    .addTokenTransfer(slothTokenId, recipientWallet, rewardAmount); // Add to recipient
+
+                                const txResponse = await transaction.execute(client);
+                                const receipt = await txResponse.getReceipt(client);
+
+                                if (receipt.status.toString() !== 'SUCCESS') {
+                                    throw new Error('Token transfer failed');
+                                }
+
+                                // Update the claim status
+                                db.run(
+                                    `UPDATE season_rewards SET claimed = 1 WHERE seasonId = ? AND xUsername = ?`,
+                                    [previousSeasonId, xUsername],
+                                    (err) => {
+                                        if (err) {
+                                            console.error('Error updating claim status:', err);
+                                            return res.status(500).json({ error: 'Database error' });
+                                        }
+                                        console.log(`Reward claimed: ${rewardAmount} $SLOTH to ${recipientWallet} for ${xUsername}`);
+                                        res.json({ message: `Successfully claimed ${rewardAmount} $SLOTH!` });
+                                    }
+                                );
+                            } catch (error) {
+                                console.error('Error transferring tokens:', error);
+                                res.status(500).json({ error: 'Failed to transfer tokens. Please try again later.' });
+                            }
+                        }
+                    );
+                }
+            );
+        }
+    );
 });
 
 // Admin endpoint to verify the password
