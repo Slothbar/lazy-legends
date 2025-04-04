@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveAnnouncementBtn = document.getElementById('save-announcement-btn');
     const backToControlsBtn = document.getElementById('back-to-controls-btn');
     const backToControlsFromAnnouncementBtn = document.getElementById('back-to-controls-from-announcement-btn');
-    const announcementInput = document.getElementById('announcement-input');
 
     if (adminLink) {
         adminLink.addEventListener('click', (e) => {
@@ -172,16 +171,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (editAnnouncementBtn) {
         editAnnouncementBtn.addEventListener('click', async () => {
+            const announcementInput = document.getElementById('announcement-input'); // Query inside the event listener
+            if (!announcementInput) {
+                console.error('announcementInput element not found');
+                alert('Error: Announcement input field not found. Please check the page structure.');
+                return;
+            }
+
             try {
                 const response = await fetch('/api/admin/announcement');
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('Fetched announcement data:', data);
                     announcementInput.value = data.text;
                     adminControls.style.display = 'none';
                     adminAnnouncement.style.display = 'block';
                 } else {
                     const errorData = await response.json();
-                    alert(`Error: ${errorData.error || 'Unknown error'}`);
+                    console.error('Error fetching announcement:', errorData);
+                    alert(`Error fetching announcement: ${errorData.error || 'Unknown error'}`);
                 }
             } catch (error) {
                 console.error('Error fetching announcement:', error);
@@ -193,6 +201,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saveAnnouncementBtn) {
         saveAnnouncementBtn.addEventListener('click', async () => {
             const adminPassword = adminPasswordInput.dataset.password;
+            const announcementInput = document.getElementById('announcement-input');
+            if (!announcementInput) {
+                console.error('announcementInput element not found');
+                alert('Error: Announcement input field not found. Please check the page structure.');
+                return;
+            }
+
             const text = announcementInput.value.trim();
 
             if (!text) {
@@ -353,7 +368,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const data = await response.json();
                 const announcementText = document.getElementById('announcement-text');
-                announcementText.textContent = data.text;
+                if (announcementText) {
+                    announcementText.textContent = data.text;
+                } else {
+                    console.error('announcement-text element not found');
+                }
             } else {
                 console.error('Error fetching announcement:', await response.json());
             }
