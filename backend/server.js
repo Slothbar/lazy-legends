@@ -187,7 +187,7 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
     });
 });
 
-// Admin endpoint to reset the entire leaderboard
+// Admin endpoint to reset the leaderboard (reset points and start new season)
 app.post('/api/admin/reset-leaderboard', (req, res) => {
     const { adminPassword } = req.body;
 
@@ -196,33 +196,43 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
 
-    // Log the current users before deletion
-    db.all(`SELECT xUsername FROM users`, [], (err, rows) => {
+    // Log the current users before resetting points
+    db.all(`SELECT xUsername, sloMoPoints FROM users`, [], (err, rows) => {
         if (err) {
             console.error('Error fetching users before resetting:', err);
             return res.status(500).json({ error: 'Database error' });
         }
         console.log('Users before resetting:', rows);
 
-        // Delete all users from the database
+        // Reset all users' SloMo Points to 0
         db.run(
-            `DELETE FROM users`,
+            `UPDATE users SET sloMoPoints = 0`,
             (err) => {
                 if (err) {
-                    console.error('Error resetting leaderboard:', err);
+                    console.error('Error resetting SloMo Points:', err);
                     return res.status(500).json({ error: 'Database error' });
                 }
-                console.log('Reset the entire leaderboard');
+                console.log('Reset all users\' SloMo Points to 0');
 
-                // Verify the table is empty
-                db.all(`SELECT xUsername FROM users`, [], (err, remainingRows) => {
-                    if (err) {
-                        console.error('Error fetching users after resetting:', err);
-                        return res.status(500).json({ error: 'Database error' });
+                // Insert a new season start timestamp
+                const newSeasonStart = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+                db.run(
+                    `INSERT INTO seasons (startTimestamp) VALUES (?)`,
+                    [newSeasonStart],
+                    (err) => {
+                        if (err) {
+                            console.error('Error inserting new season:', err);
+                            return res.status(500).json({ error: 'Database error' });
+                        }
+                        console.log('Started new season with timestamp:', newSeasonStart);
+
+                        // Clear the lastChecked object to reset tweet tracking
+                        Object.keys(lastChecked).forEach(key => delete lastChecked[key]);
+                        console.log('Cleared lastChecked timestamps for new season');
+
+                        res.status(200).json({ message: 'Successfully reset the leaderboard and started a new season' });
                     }
-                    console.log('Users after resetting:', remainingRows);
-                    res.status(200).json({ message: 'Successfully reset the leaderboard' });
-                });
+                );
             }
         );
     });
@@ -231,65 +241,83 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
 async function trackLazyLegendsPosts() {
     setInterval(async () => {
         console.log('Checking for #LazyLegends posts now...');
-        db.all(`SELECT xUsername FROM users WHERE xUsername IS NOT NULL`, [], async (err, rows) => {
-            if (err) return console.error(err);
 
-            if (!rows || rows.length === 0) {
-                console.log('No users to check for #LazyLegends posts.');
-                return;
-            }
-
-            console.log(`Found ${rows.length} users to check.`);
-
-            for (const row of rows) {
-                const lastTime = lastChecked[row.xUsername] || 0;
-                const now = Date.now();
-                if (now - lastTime < 1800000) {
-                    console.log(`Skipping ${row.xUsername} - last checked at ${new Date(lastTime).toISOString()}`);
-                    continue;
+        // Get the latest season start timestamp
+        db.get(
+            `SELECT startTimestamp FROM seasons ORDER BY id DESC LIMIT 1`,
+            [],
+            async (err, row) => {
+                if (err) {
+                    console.error('Error fetching season start timestamp:', err);
+                    return;
                 }
+                if (!row) {
+                    console.log('No season found, skipping tweet tracking.');
+                    return;
+                }
+                const seasonStartTimestamp = row.startTimestamp * 1000; // Convert to milliseconds
 
-                console.log(`Checking tweets for ${row.xUsername}...`);
-                try {
-                    const response = await axios.get('https://api.twitter.com/2/tweets/search/recent', {
-                        headers: { Authorization: `Bearer ${X_BEARER_TOKEN}` },
-                        params: {
-                            query: `#LazyLegends from:${row.xUsername.replace('@', '')}`,
-                            max_results: 10,
-                            'tweet.fields': 'created_at'
+                db.all(`SELECT xUsername FROM users WHERE xUsername IS NOT NULL`, [], async (err, rows) => {
+                    if (err) return console.error(err);
+
+                    if (!rows || rows.length === 0) {
+                        console.log('No users to check for #LazyLegends posts.');
+                        return;
+                    }
+
+                    console.log(`Found ${rows.length} users to check.`);
+
+                    for (const row of rows) {
+                        const lastTime = lastChecked[row.xUsername] || seasonStartTimestamp;
+                        const now = Date.now();
+                        if (now - lastTime < 1800000) {
+                            console.log(`Skipping ${row.xUsername} - last checked at ${new Date(lastTime).toISOString()}`);
+                            continue;
                         }
-                    });
 
-                    const tweets = response.data.data || [];
-                    const newTweets = tweets.filter(tweet => {
-                        const tweetTime = new Date(tweet.created_at).getTime();
-                        return tweetTime > lastTime;
-                    });
+                        console.log(`Checking tweets for ${row.xUsername}...`);
+                        try {
+                            const response = await axios.get('https://api.twitter.com/2/tweets/search/recent', {
+                                headers: { Authorization: `Bearer ${X_BEARER_TOKEN}` },
+                                params: {
+                                    query: `#LazyLegends from:${row.xUsername.replace('@', '')}`,
+                                    max_results: 10,
+                                    'tweet.fields': 'created_at'
+                                }
+                            });
 
-                    const pointsToAdd = newTweets.length * 2;
-                    if (pointsToAdd > 0) {
-                        db.run(
-                            `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE xUsername = ?`,
-                            [pointsToAdd, row.xUsername],
-                            (err) => {
-                                if (err) console.error(err);
-                                console.log(`${row.xUsername} earned ${pointsToAdd} SloMo Points`);
+                            const tweets = response.data.data || [];
+                            const newTweets = tweets.filter(tweet => {
+                                const tweetTime = new Date(tweet.created_at).getTime();
+                                return tweetTime > lastTime && tweetTime >= seasonStartTimestamp;
+                            });
+
+                            const pointsToAdd = newTweets.length * 2;
+                            if (pointsToAdd > 0) {
+                                db.run(
+                                    `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE xUsername = ?`,
+                                    [pointsToAdd, row.xUsername],
+                                    (err) => {
+                                        if (err) console.error(err);
+                                        console.log(`${row.xUsername} earned ${pointsToAdd} SloMo Points`);
+                                    }
+                                );
+                            } else {
+                                console.log(`No new #LazyLegends tweets found for ${row.xUsername} since season start`);
                             }
-                        );
-                    } else {
-                        console.log(`No new #LazyLegends tweets found for ${row.xUsername}`);
+                            lastChecked[row.xUsername] = now;
+                        } catch (error) {
+                            console.error(`Error fetching tweets for ${row.xUsername}:`, error.response?.data || error.message);
+                            if (error.response?.status === 429) {
+                                console.log('Hit 429 limit, waiting 5 minutes...');
+                                await new Promise(resolve => setTimeout(resolve, 300000));
+                            }
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 30000));
                     }
-                    lastChecked[row.xUsername] = now;
-                } catch (error) {
-                    console.error(`Error fetching tweets for ${row.xUsername}:`, error.response?.data || error.message);
-                    if (error.response?.status === 429) {
-                        console.log('Hit 429 limit, waiting 5 minutes...');
-                        await new Promise(resolve => setTimeout(resolve, 300000));
-                    }
-                }
-                await new Promise(resolve => setTimeout(resolve, 30000));
+                });
             }
-        });
+        );
     }, 1800000);
 }
 
