@@ -267,6 +267,39 @@ button:hover {
     color: #4a7c59;
 }
 
+/* Season Rewards Section */
+#season-rewards-section #season-winners {
+    margin-bottom: 20px;
+}
+
+#season-rewards-section #season-winners p {
+    font-size: 1em;
+    color: #4a7c59;
+    margin-bottom: 5px;
+}
+
+#season-rewards-section #claim-rewards {
+    text-align: center;
+    background: linear-gradient(90deg, #ffd700, #ffaa00);
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+#season-rewards-section #claim-rewards p {
+    font-size: 1em;
+    color: #2f4f4f;
+    margin-bottom: 10px;
+}
+
+#season-rewards-section #claim-rewards-btn {
+    background: linear-gradient(90deg, #4a7c59, #6b9e78);
+}
+
+#season-rewards-section #claim-rewards-btn:hover {
+    background: linear-gradient(90deg, #6b9e78, #8ab89a);
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
