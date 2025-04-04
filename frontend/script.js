@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load leaderboard on page load
     fetchLeaderboard();
 
+    // Load season winners on page load
+    fetchSeasonWinners();
+
     // Handle hamburger menu toggle
     const hamburgerMenu = document.querySelector('.hamburger-menu');
     const hamburgerIcon = document.querySelector('.hamburger-icon');
@@ -33,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveAnnouncementBtn = document.getElementById('save-announcement-btn');
     const backToControlsBtn = document.getElementById('back-to-controls-btn');
     const backToControlsFromAnnouncementBtn = document.getElementById('back-to-controls-from-announcement-btn');
+    const claimRewardsBtn = document.getElementById('claim-rewards-btn');
 
     if (adminLink) {
         adminLink.addEventListener('click', (e) => {
@@ -122,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     alert('Successfully reset the leaderboard and started a new season!');
                     fetchLeaderboard();
+                    fetchSeasonWinners(); // Refresh season winners after reset
                 } else {
                     const errorData = await response.json();
                     alert(`Error: ${errorData.error || 'Unknown error'}`);
@@ -171,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (editAnnouncementBtn) {
         editAnnouncementBtn.addEventListener('click', async () => {
-            const announcementInput = document.getElementById('announcement-input'); // Query inside the event listener
+            const announcementInput = document.getElementById('announcement-input');
             if (!announcementInput) {
                 console.error('announcementInput element not found');
                 alert('Error: Announcement input field not found. Please check the page structure.');
@@ -252,6 +257,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (claimRewardsBtn) {
+        claimRewardsBtn.addEventListener('click', async () => {
+            const xUsername = localStorage.getItem('xUsername'); // Store the logged-in user's X username after profile linking
+            if (!xUsername) {
+                alert('Please link your X profile to claim rewards.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/claim-rewards', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ xUsername })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(data.message);
+                    fetchSeasonWinners(); // Refresh the winners list to update claim status
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error claiming rewards:', error);
+                alert('Error claiming rewards. Check the console for details.');
+            }
+        });
+    }
+
     // Handle profile form submission (Step 1: X Username)
     const profileFormStep1 = document.getElementById('profile-form-step1');
     const profileFormStep2 = document.getElementById('profile-form-step2');
@@ -328,6 +363,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     profileFormStep2.reset();
                     nextStepsSection.style.display = 'block';
                     fetchLeaderboard(); // Refresh leaderboard
+                    // Store the logged-in user's X username
+                    localStorage.setItem('xUsername', xUsername);
+                    fetchSeasonWinners(); // Refresh season winners to check eligibility
                 } else {
                     const errorData = await response.json();
                     formFeedback.style.display = 'block';
@@ -405,6 +443,50 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } catch (error) {
             console.error('Error fetching leaderboard:', error);
+        }
+    }
+
+    async function fetchSeasonWinners() {
+        try {
+            const response = await fetch('/api/season-winners');
+            if (response.ok) {
+                const data = await response.json();
+                const seasonWinnersDiv = document.getElementById('season-winners');
+                const claimRewardsDiv = document.getElementById('claim-rewards');
+                const rewardDetailsP = document.getElementById('reward-details');
+
+                // Display the winners
+                seasonWinnersDiv.innerHTML = '';
+                if (data.winners.length === 0) {
+                    seasonWinnersDiv.innerHTML = '<p>No winners available for the previous season.</p>';
+                } else {
+                    data.winners.forEach(winner => {
+                        const status = winner.claimed ? ' (Claimed)' : ' (Not Claimed)';
+                        const winnerText = `Rank ${winner.rank}: ${winner.xUsername} - ${winner.rewardAmount} $SLOTH${status}`;
+                        const p = document.createElement('p');
+                        p.textContent = winnerText;
+                        seasonWinnersDiv.appendChild(p);
+                    });
+                }
+
+                // Check if the logged-in user is eligible to claim rewards
+                const xUsername = localStorage.getItem('xUsername');
+                if (xUsername) {
+                    const userWinner = data.winners.find(winner => winner.xUsername === xUsername);
+                    if (userWinner && !userWinner.claimed) {
+                        claimRewardsDiv.style.display = 'block';
+                        rewardDetailsP.textContent = `Rank ${userWinner.rank}: You won ${userWinner.rewardAmount} $SLOTH!`;
+                    } else {
+                        claimRewardsDiv.style.display = 'none';
+                    }
+                } else {
+                    claimRewardsDiv.style.display = 'none';
+                }
+            } else {
+                console.error('Error fetching season winners:', await response.json());
+            }
+        } catch (error) {
+            console.error('Error fetching season winners:', error);
         }
     }
 });
