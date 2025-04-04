@@ -11,13 +11,38 @@ db.serialize(() => {
         )
     `);
 
-    // New seasons table to track season start timestamps
+    // Existing seasons table
     db.run(`
         CREATE TABLE IF NOT EXISTS seasons (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             startTimestamp INTEGER NOT NULL
         )
     `);
+
+    // New announcements table to store the announcement text
+    db.run(`
+        CREATE TABLE IF NOT EXISTS announcements (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            text TEXT NOT NULL
+        )
+    `);
+
+    // Insert a default announcement if none exists
+    db.get(`SELECT COUNT(*) as count FROM announcements`, (err, row) => {
+        if (err) {
+            console.error('Error checking announcements table:', err);
+            return;
+        }
+        if (row.count === 0) {
+            db.run(`INSERT INTO announcements (id, text) VALUES (1, 'Welcome to Season 1 of Lazy Legends! Post #LazyLegends to earn SloMo Points! 🦥')`, (err) => {
+                if (err) {
+                    console.error('Error inserting default announcement:', err);
+                } else {
+                    console.log('Initialized default announcement');
+                }
+            });
+        }
+    });
 
     // Insert a default season if none exists (for initial setup)
     db.get(`SELECT COUNT(*) as count FROM seasons`, (err, row) => {
