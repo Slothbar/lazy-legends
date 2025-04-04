@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Load announcement on page load
+    fetchAnnouncement();
+
     // Load leaderboard on page load
     fetchLeaderboard();
 
@@ -19,13 +22,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminLogin = document.getElementById('admin-login');
     const adminControls = document.getElementById('admin-controls');
     const adminUsers = document.getElementById('admin-users');
+    const adminAnnouncement = document.getElementById('admin-announcement');
     const adminPasswordInput = document.getElementById('admin-password');
     const adminLoginBtn = document.getElementById('admin-login-btn');
     const backToHomeBtn = document.getElementById('back-to-home-btn');
     const clearInvalidUsersBtn = document.getElementById('clear-invalid-users-btn');
     const resetLeaderboardBtn = document.getElementById('reset-leaderboard-btn');
     const viewAllUsersBtn = document.getElementById('view-all-users-btn');
+    const editAnnouncementBtn = document.getElementById('edit-announcement-btn');
+    const saveAnnouncementBtn = document.getElementById('save-announcement-btn');
     const backToControlsBtn = document.getElementById('back-to-controls-btn');
+    const backToControlsFromAnnouncementBtn = document.getElementById('back-to-controls-from-announcement-btn');
+    const announcementInput = document.getElementById('announcement-input');
 
     if (adminLink) {
         adminLink.addEventListener('click', (e) => {
@@ -69,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminLogin.style.display = 'block';
             adminControls.style.display = 'none';
             adminUsers.style.display = 'none';
+            adminAnnouncement.style.display = 'none';
             adminPasswordInput.value = '';
         });
     }
@@ -161,9 +170,69 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (editAnnouncementBtn) {
+        editAnnouncementBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/admin/announcement');
+                if (response.ok) {
+                    const data = await response.json();
+                    announcementInput.value = data.text;
+                    adminControls.style.display = 'none';
+                    adminAnnouncement.style.display = 'block';
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error fetching announcement:', error);
+                alert('Error fetching announcement. Check the console for details.');
+            }
+        });
+    }
+
+    if (saveAnnouncementBtn) {
+        saveAnnouncementBtn.addEventListener('click', async () => {
+            const adminPassword = adminPasswordInput.dataset.password;
+            const text = announcementInput.value.trim();
+
+            if (!text) {
+                alert('Announcement text cannot be empty!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/update-announcement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminPassword, text })
+                });
+
+                if (response.ok) {
+                    alert('Announcement updated successfully!');
+                    fetchAnnouncement(); // Refresh the announcement bar
+                    adminAnnouncement.style.display = 'none';
+                    adminControls.style.display = 'block';
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error updating announcement:', error);
+                alert('Error updating announcement. Check the console for details.');
+            }
+        });
+    }
+
     if (backToControlsBtn) {
         backToControlsBtn.addEventListener('click', () => {
             adminUsers.style.display = 'none';
+            adminControls.style.display = 'block';
+        });
+    }
+
+    if (backToControlsFromAnnouncementBtn) {
+        backToControlsFromAnnouncementBtn.addEventListener('click', () => {
+            adminAnnouncement.style.display = 'none';
             adminControls.style.display = 'block';
         });
     }
@@ -276,6 +345,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const tweetUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
             window.open(tweetUrl, '_blank');
         });
+    }
+
+    async function fetchAnnouncement() {
+        try {
+            const response = await fetch('/api/admin/announcement');
+            if (response.ok) {
+                const data = await response.json();
+                const announcementText = document.getElementById('announcement-text');
+                announcementText.textContent = data.text;
+            } else {
+                console.error('Error fetching announcement:', await response.json());
+            }
+        } catch (error) {
+            console.error('Error fetching announcement:', error);
+        }
     }
 
     async function fetchLeaderboard() {
