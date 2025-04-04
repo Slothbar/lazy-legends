@@ -4,11 +4,20 @@ const axios = require('axios');
 const { google } = require('googleapis');
 const db = require('./database.js');
 const path = require('path');
+const session = require('express-session');
 const { Client, TokenTransferTransaction, AccountId, PrivateKey } = require('@hashgraph/sdk');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Configure session middleware
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-session-secret', // Use an environment variable in production
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false } // Set to true in production with HTTPS
+}));
 
 app.use(express.static(path.join(__dirname, '../frontend')));
 
@@ -65,18 +74,32 @@ app.post('/api/profile', (req, res) => {
         return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
     }
 
+    // Normalize xUsername to lowercase for consistency
+    const normalizedXUsername = xUsername.toLowerCase();
+
     // Add 5 bonus SloMo Points if wallet address is provided
     const bonusPoints = hederaWallet !== 'N/A' ? 5 : 0;
 
     db.run(
         `INSERT INTO users (xUsername, hederaWallet, sloMoPoints) VALUES (?, ?, ?) ON CONFLICT(xUsername) DO UPDATE SET hederaWallet = ?, sloMoPoints = sloMoPoints + ?`,
-        [xUsername, hederaWallet, bonusPoints, hederaWallet, bonusPoints],
+        [normalizedXUsername, hederaWallet, bonusPoints, hederaWallet, bonusPoints],
         async (err) => {
             if (err) return res.status(500).json({ error: 'Database error' });
-            await appendToGoogleSheet(xUsername, hederaWallet);
+            await appendToGoogleSheet(normalizedXUsername, hederaWallet);
+            // Store the xUsername in the session
+            req.session.xUsername = normalizedXUsername;
             res.status(200).json({ message: 'Profile saved' });
         }
     );
+});
+
+// Endpoint to get the logged-in user's xUsername
+app.get('/api/whoami', (req, res) => {
+    if (req.session.xUsername) {
+        res.json({ xUsername: req.session.xUsername });
+    } else {
+        res.status(401).json({ error: 'Not logged in' });
+    }
 });
 
 app.get('/api/leaderboard', (req, res) => {
@@ -121,65 +144,13 @@ app.get('/api/season-winners', (req, res) => {
 
                     const previousSeasonId = previousSeason.id;
 
-                    // Check if winners have already been recorded for the previous season
-                    db.get(
-                        `SELECT COUNT(*) as count FROM season_rewards WHERE seasonId = ?`,
+                    // Fetch the winners with claim status
+                    db.all(
+                        `SELECT xUsername, rank, rewardAmount, claimed FROM season_rewards WHERE seasonId = ?`,
                         [previousSeasonId],
-                        (err, row) => {
+                        (err, winners) => {
                             if (err) return res.status(500).json({ error: 'Database error' });
-
-                            if (row.count === 0) {
-                                // Winners not recorded yet, determine the top 3 from the previous season
-                                // Note: We don't have historical points, so we'll assume the current leaderboard reflects the end of the previous season
-                                // In a future improvement, we can store points at season end
-                                db.all(
-                                    `SELECT xUsername, sloMoPoints FROM users ORDER BY sloMoPoints DESC LIMIT 3`,
-                                    [],
-                                    (err, topPlayers) => {
-                                        if (err) return res.status(500).json({ error: 'Database error' });
-
-                                        // Define reward amounts
-                                        const rewards = [
-                                            { rank: 1, amount: 100 }, // 1st place: 100 $SLOTH
-                                            { rank: 2, amount: 50 },  // 2nd place: 50 $SLOTH
-                                            { rank: 3, amount: 25 }   // 3rd place: 25 $SLOTH
-                                        ];
-
-                                        // Insert the winners into season_rewards
-                                        const insertStmt = db.prepare(`
-                                            INSERT INTO season_rewards (seasonId, xUsername, rank, rewardAmount, claimed)
-                                            VALUES (?, ?, ?, ?, 0)
-                                        `);
-                                        topPlayers.forEach((player, index) => {
-                                            const reward = rewards[index];
-                                            if (reward) {
-                                                insertStmt.run(previousSeasonId, player.xUsername, reward.rank, reward.amount);
-                                            }
-                                        });
-                                        insertStmt.finalize();
-
-                                        // Fetch the winners with claim status
-                                        db.all(
-                                            `SELECT xUsername, rank, rewardAmount, claimed FROM season_rewards WHERE seasonId = ?`,
-                                            [previousSeasonId],
-                                            (err, winners) => {
-                                                if (err) return res.status(500).json({ error: 'Database error' });
-                                                res.json({ seasonId: previousSeasonId, winners });
-                                            }
-                                        );
-                                    }
-                                );
-                            } else {
-                                // Winners already recorded, fetch them with claim status
-                                db.all(
-                                    `SELECT xUsername, rank, rewardAmount, claimed FROM season_rewards WHERE seasonId = ?`,
-                                    [previousSeasonId],
-                                    (err, winners) => {
-                                        if (err) return res.status(500).json({ error: 'Database error' });
-                                        res.json({ seasonId: previousSeasonId, winners });
-                                    }
-                                );
-                            }
+                            res.json({ seasonId: previousSeasonId, winners });
                         }
                     );
                 }
@@ -190,10 +161,10 @@ app.get('/api/season-winners', (req, res) => {
 
 // Endpoint to claim rewards
 app.post('/api/claim-rewards', async (req, res) => {
-    const { xUsername } = req.body;
+    const xUsername = req.session.xUsername;
 
     if (!xUsername) {
-        return res.status(400).json({ error: 'X username is required' });
+        return res.status(401).json({ error: 'Not logged in' });
     }
 
     // Get the current season
@@ -275,7 +246,7 @@ app.post('/api/admin/verify-password', (req, res) => {
     const { adminPassword } = req.body;
 
     if (adminPassword !== ADMIN_PASSWORD) {
-        return res.status(403).json({ error: ' WUnauthorized: Invalid admin password' });
+        return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
 
     res.status(200).json({ message: 'Password verified' });
@@ -440,46 +411,88 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
 
-    // Log the current users before resetting points
-    db.all(`SELECT xUsername, sloMoPoints FROM users`, [], (err, rows) => {
-        if (err) {
-            console.error('Error fetching users before resetting:', err);
-            return res.status(500).json({ error: 'Database error' });
-        }
-        console.log('Users before resetting:', rows);
-
-        // Reset all users' SloMo Points to 0
-        db.run(
-            `UPDATE users SET sloMoPoints = 0`,
-            (err) => {
-                if (err) {
-                    console.error('Error resetting SloMo Points:', err);
-                    return res.status(500).json({ error: 'Database error' });
-                }
-                console.log('Reset all users\' SloMo Points to 0');
-
-                // Insert a new season start timestamp
-                const newSeasonStart = Math.floor(Date.now() / 1000); // Current timestamp in seconds
-                db.run(
-                    `INSERT INTO seasons (startTimestamp) VALUES (?)`,
-                    [newSeasonStart],
-                    (err) => {
-                        if (err) {
-                            console.error('Error inserting new season:', err);
-                            return res.status(500).json({ error: 'Database error' });
-                        }
-                        console.log('Started new season with timestamp:', newSeasonStart);
-
-                        // Clear the lastChecked object to reset tweet tracking
-                        Object.keys(lastChecked).forEach(key => delete lastChecked[key]);
-                        console.log('Cleared lastChecked timestamps for new season');
-
-                        res.status(200).json({ message: 'Successfully reset the leaderboard and started a new season' });
-                    }
-                );
+    // Get the current season (latest season)
+    db.get(
+        `SELECT id FROM seasons ORDER BY id DESC LIMIT 1`,
+        [],
+        (err, currentSeason) => {
+            if (err) {
+                console.error('Error fetching current season:', err);
+                return res.status(500).json({ error: 'Database error' });
             }
-        );
-    });
+            if (!currentSeason) {
+                console.error('No seasons found');
+                return res.status(404).json({ error: 'No seasons found' });
+            }
+
+            const currentSeasonId = currentSeason.id;
+
+            // Get the top 3 players before resetting points
+            db.all(
+                `SELECT xUsername, sloMoPoints FROM users ORDER BY sloMoPoints DESC LIMIT 3`,
+                [],
+                (err, topPlayers) => {
+                    if (err) {
+                        console.error('Error fetching top players:', err);
+                        return res.status(500).json({ error: 'Database error' });
+                    }
+                    console.log('Top players before season end:', topPlayers);
+
+                    // Define reward amounts
+                    const rewards = [
+                        { rank: 1, amount: 100 }, // 1st place: 100 $SLOTH
+                        { rank: 2, amount: 50 },  // 2nd place: 50 $SLOTH
+                        { rank: 3, amount: 25 }   // 3rd place: 25 $SLOTH
+                    ];
+
+                    // Insert the winners into season_rewards
+                    const insertStmt = db.prepare(`
+                        INSERT INTO season_rewards (seasonId, xUsername, rank, rewardAmount, claimed)
+                        VALUES (?, ?, ?, ?, 0)
+                    `);
+                    topPlayers.forEach((player, index) => {
+                        const reward = rewards[index];
+                        if (reward) {
+                            insertStmt.run(currentSeasonId, player.xUsername, reward.rank, reward.amount);
+                        }
+                    });
+                    insertStmt.finalize();
+
+                    // Reset all users' SloMo Points to 0
+                    db.run(
+                        `UPDATE users SET sloMoPoints = 0`,
+                        (err) => {
+                            if (err) {
+                                console.error('Error resetting SloMo Points:', err);
+                                return res.status(500).json({ error: 'Database error' });
+                            }
+                            console.log('Reset all users\' SloMo Points to 0');
+
+                            // Insert a new season start timestamp
+                            const newSeasonStart = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+                            db.run(
+                                `INSERT INTO seasons (startTimestamp) VALUES (?)`,
+                                [newSeasonStart],
+                                (err) => {
+                                    if (err) {
+                                        console.error('Error inserting new season:', err);
+                                        return res.status(500).json({ error: 'Database error' });
+                                    }
+                                    console.log('Started new season with timestamp:', newSeasonStart);
+
+                                    // Clear the lastChecked object to reset tweet tracking
+                                    Object.keys(lastChecked).forEach(key => delete lastChecked[key]);
+                                    console.log('Cleared lastChecked timestamps for new season');
+
+                                    res.status(200).json({ message: 'Successfully reset the leaderboard and started a new season' });
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        }
+    );
 });
 
 async function trackLazyLegendsPosts() {
