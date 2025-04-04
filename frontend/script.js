@@ -259,17 +259,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (claimRewardsBtn) {
         claimRewardsBtn.addEventListener('click', async () => {
-            const xUsername = localStorage.getItem('xUsername'); // Store the logged-in user's X username after profile linking
-            if (!xUsername) {
-                alert('Please link your X profile to claim rewards.');
-                return;
-            }
-
             try {
                 const response = await fetch('/api/claim-rewards', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ xUsername })
+                    headers: { 'Content-Type': 'application/json' }
                 });
 
                 if (response.ok) {
@@ -363,8 +356,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     profileFormStep2.reset();
                     nextStepsSection.style.display = 'block';
                     fetchLeaderboard(); // Refresh leaderboard
-                    // Store the logged-in user's X username
-                    localStorage.setItem('xUsername', xUsername);
                     fetchSeasonWinners(); // Refresh season winners to check eligibility
                 } else {
                     const errorData = await response.json();
@@ -448,17 +439,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchSeasonWinners() {
         try {
+            // First, fetch the logged-in user's xUsername
+            const whoamiResponse = await fetch('/api/whoami');
+            let xUsername = null;
+            if (whoamiResponse.ok) {
+                const whoamiData = await whoamiResponse.json();
+                xUsername = whoamiData.xUsername;
+            }
+
             const response = await fetch('/api/season-winners');
+            const seasonWinnersDiv = document.getElementById('season-winners');
+            const claimRewardsDiv = document.getElementById('claim-rewards');
+            const rewardDetailsP = document.getElementById('reward-details');
+
             if (response.ok) {
                 const data = await response.json();
-                const seasonWinnersDiv = document.getElementById('season-winners');
-                const claimRewardsDiv = document.getElementById('claim-rewards');
-                const rewardDetailsP = document.getElementById('reward-details');
-
-                // Display the winners
                 seasonWinnersDiv.innerHTML = '';
+
                 if (data.winners.length === 0) {
-                    seasonWinnersDiv.innerHTML = '<p>No winners available for the previous season.</p>';
+                    seasonWinnersDiv.innerHTML = '<p>No previous seasons yet. Keep posting to win!</p>';
                 } else {
                     data.winners.forEach(winner => {
                         const status = winner.claimed ? ' (Claimed)' : ' (Not Claimed)';
@@ -467,26 +466,35 @@ document.addEventListener('DOMContentLoaded', () => {
                         p.textContent = winnerText;
                         seasonWinnersDiv.appendChild(p);
                     });
-                }
 
-                // Check if the logged-in user is eligible to claim rewards
-                const xUsername = localStorage.getItem('xUsername');
-                if (xUsername) {
-                    const userWinner = data.winners.find(winner => winner.xUsername === xUsername);
-                    if (userWinner && !userWinner.claimed) {
-                        claimRewardsDiv.style.display = 'block';
-                        rewardDetailsP.textContent = `Rank ${userWinner.rank}: You won ${userWinner.rewardAmount} $SLOTH!`;
+                    // Check if the logged-in user is eligible to claim rewards
+                    if (xUsername) {
+                        const userWinner = data.winners.find(winner => winner.xUsername === xUsername);
+                        if (userWinner && !userWinner.claimed) {
+                            claimRewardsDiv.style.display = 'block';
+                            rewardDetailsP.textContent = `Rank ${userWinner.rank}: You won ${userWinner.rewardAmount} $SLOTH!`;
+                        } else {
+                            claimRewardsDiv.style.display = 'none';
+                        }
                     } else {
                         claimRewardsDiv.style.display = 'none';
                     }
-                } else {
-                    claimRewardsDiv.style.display = 'none';
                 }
             } else {
-                console.error('Error fetching season winners:', await response.json());
+                const errorData = await response.json();
+                if (errorData.error === 'No previous season found') {
+                    seasonWinnersDiv.innerHTML = '<p>No previous seasons yet. Keep posting to win!</p>';
+                } else {
+                    console.error('Error fetching season winners:', errorData);
+                }
+                claimRewardsDiv.style.display = 'none';
             }
         } catch (error) {
             console.error('Error fetching season winners:', error);
+            const seasonWinnersDiv = document.getElementById('season-winners');
+            const claimRewardsDiv = document.getElementById('claim-rewards');
+            seasonWinnersDiv.innerHTML = '<p>No previous seasons yet. Keep posting to win!</p>';
+            claimRewardsDiv.style.display = 'none';
         }
     }
 });
