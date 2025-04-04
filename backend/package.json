@@ -10,7 +10,7 @@
     "express": "^4.17.1",
     "cors": "^2.8.5",
     "axios": "^0.21.1",
-    "googleapis": "^39.2.0",
+    "googleapis": "^144.0.0",
     "sqlite3": "^5.0.2",
     "@hashgraph/sdk": "^2.0.0"
   }
