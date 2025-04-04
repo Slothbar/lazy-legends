@@ -27,11 +27,24 @@ db.serialize(() => {
         )
     `);
 
-    // New bonus_days table to store bonus day schedules
+    // Existing bonus_days table
     db.run(`
         CREATE TABLE IF NOT EXISTS bonus_days (
             date TEXT PRIMARY KEY, -- Date in YYYY-MM-DD format
             multiplier INTEGER NOT NULL
+        )
+    `);
+
+    // New season_rewards table to track reward claims
+    db.run(`
+        CREATE TABLE IF NOT EXISTS season_rewards (
+            seasonId INTEGER NOT NULL,
+            xUsername TEXT NOT NULL,
+            rank INTEGER NOT NULL, -- 1, 2, or 3
+            rewardAmount INTEGER NOT NULL, -- Amount in $SLOTH (e.g., 100 for 1st)
+            claimed BOOLEAN DEFAULT 0,
+            PRIMARY KEY (seasonId, xUsername),
+            FOREIGN KEY (xUsername) REFERENCES users(xUsername)
         )
     `);
 
