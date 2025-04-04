@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (resetLeaderboardBtn) {
         resetLeaderboardBtn.addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to reset the entire leaderboard? This will remove all users and cannot be undone.')) {
+            if (!confirm('Are you sure you want to reset the leaderboard? This will reset all SloMo Points to 0 and start a new season.')) {
                 return;
             }
 
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (response.ok) {
-                    alert('Successfully reset the leaderboard!');
+                    alert('Successfully reset the leaderboard and started a new season!');
                     fetchLeaderboard();
                 } else {
                     const errorData = await response.json();
@@ -286,9 +286,15 @@ document.addEventListener('DOMContentLoaded', () => {
             leaderboardBody.innerHTML = '';
 
             leaderboard.forEach((entry, index) => {
+                const rank = index + 1;
+                let rankDisplay = rank.toString();
+                if (rank === 1) rankDisplay = '🏆 1';
+                else if (rank === 2) rankDisplay = '🥈 2';
+                else if (rank === 3) rankDisplay = '🥉 3';
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${index + 1}</td>
+                    <td>${rankDisplay}</td>
                     <td>${entry.xUsername}</td>
                     <td>${entry.sloMoPoints}</td>
                 `;
