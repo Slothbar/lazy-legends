@@ -79,6 +79,15 @@ app.get('/api/leaderboard', (req, res) => {
     );
 });
 
+// Endpoint to check if today is a bonus day
+app.get('/api/bonus-day', (req, res) => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const isBonusDay = dayOfWeek === 0; // Sunday
+    const multiplier = isBonusDay ? 2 : 1; // 2x on Sundays, 1x otherwise
+    res.json({ isBonusDay, multiplier });
+});
+
 // Admin endpoint to verify the password
 app.post('/api/admin/verify-password', (req, res) => {
     const { adminPassword } = req.body;
@@ -104,13 +113,25 @@ app.get('/api/admin/users', (req, res) => {
 
 // Admin endpoint to get the current announcement
 app.get('/api/admin/announcement', (req, res) => {
+    // Check if today is a bonus day
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const isBonusDay = dayOfWeek === 0; // Sunday
+
     db.get(
         `SELECT text FROM announcements WHERE id = 1`,
         [],
         (err, row) => {
             if (err) return res.status(500).json({ error: 'Database error' });
             if (!row) return res.status(404).json({ error: 'Announcement not found' });
-            res.json({ text: row.text });
+
+            // Append bonus day message if today is Sunday
+            let announcementText = row.text;
+            if (isBonusDay) {
+                announcementText += ' 🦥 It’s Sloth Bonus Day! 2x SloMo Points today!';
+            }
+
+            res.json({ text: announcementText });
         }
     );
 });
@@ -298,6 +319,13 @@ async function trackLazyLegendsPosts() {
                 }
                 const seasonStartTimestamp = row.startTimestamp * 1000; // Convert to milliseconds
 
+                // Check if today is a bonus day
+                const today = new Date();
+                const dayOfWeek = today.getDay();
+                const isBonusDay = dayOfWeek === 0; // Sunday
+                const multiplier = isBonusDay ? 2 : 1; // 2x on Sundays, 1x otherwise
+                console.log(`Today is ${isBonusDay ? '' : 'not '}a bonus day. Multiplier: ${multiplier}`);
+
                 db.all(`SELECT xUsername FROM users WHERE xUsername IS NOT NULL`, [], async (err, rows) => {
                     if (err) return console.error(err);
 
@@ -333,14 +361,14 @@ async function trackLazyLegendsPosts() {
                                 return tweetTime > lastTime && tweetTime >= seasonStartTimestamp;
                             });
 
-                            const pointsToAdd = newTweets.length * 2;
+                            const pointsToAdd = (newTweets.length * 2) * multiplier; // Apply the multiplier
                             if (pointsToAdd > 0) {
                                 db.run(
                                     `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE xUsername = ?`,
                                     [pointsToAdd, row.xUsername],
                                     (err) => {
                                         if (err) console.error(err);
-                                        console.log(`${row.xUsername} earned ${pointsToAdd} SloMo Points`);
+                                        console.log(`${row.xUsername} earned ${pointsToAdd} SloMo Points (multiplier: ${multiplier})`);
                                     }
                                 );
                             } else {
