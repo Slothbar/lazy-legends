@@ -8,15 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load season winners on page load
     fetchSeasonWinners();
 
-    // Check if the user is on a profile page
-    const path = window.location.pathname;
-    if (path.startsWith('/profile/')) {
-        const username = path.split('/profile/')[1];
-        if (username) {
-            loadProfilePage(username);
-        }
-    }
-
     // Handle hamburger menu toggle
     const hamburgerMenu = document.querySelector('.hamburger-menu');
     const hamburgerIcon = document.querySelector('.hamburger-icon');
@@ -455,7 +446,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     const data = await response.json();
                     const username = data.xUsername;
-                    window.location.href = `/profile/${username}`;
+                    // Show the profile section as a pop-up
+                    document.querySelectorAll('section').forEach(section => section.style.display = 'none');
+                    const profileSection = document.getElementById('profile-section');
+                    profileSection.style.display = 'block';
+
+                    // Populate the profile section with user data
+                    document.getElementById('profile-x-username').textContent = data.xUsername;
+                    document.getElementById('profile-hedera-wallet').textContent = data.hederaWallet || 'N/A';
+                    document.getElementById('profile-slo-mo-points').textContent = data.sloMoPoints || 0;
+
+                    const profilePhoto = document.getElementById('profile-photo');
+                    if (data.profilePhoto) {
+                        profilePhoto.src = data.profilePhoto;
+                        profilePhoto.style.display = 'block';
+                    } else {
+                        profilePhoto.style.display = 'none';
+                    }
                 } else {
                     alert('Please sign in to view your profile.');
                     document.querySelectorAll('section').forEach(section => section.style.display = 'block');
@@ -470,42 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Error checking user session. Please sign in again.');
             }
         });
-    }
-
-    // Handle profile page loading
-    async function loadProfilePage(username) {
-        try {
-            const response = await fetch(`/api/profile/${username}`, {
-                credentials: 'include'
-            });
-
-            if (response.ok) {
-                const userData = await response.json();
-                document.querySelectorAll('section').forEach(section => section.style.display = 'none');
-                const profileSection = document.getElementById('profile-section');
-                profileSection.style.display = 'block';
-
-                document.getElementById('profile-x-username').textContent = userData.xUsername;
-                document.getElementById('profile-hedera-wallet').textContent = userData.hederaWallet || 'N/A';
-                document.getElementById('profile-slo-mo-points').textContent = userData.sloMoPoints;
-
-                const profilePhoto = document.getElementById('profile-photo');
-                if (userData.profilePhoto) {
-                    profilePhoto.src = userData.profilePhoto;
-                    profilePhoto.style.display = 'block';
-                } else {
-                    profilePhoto.style.display = 'none';
-                }
-            } else {
-                const errorData = await response.json();
-                alert(errorData.error || 'Error loading profile.');
-                window.location.href = '/';
-            }
-        } catch (error) {
-            console.error('Error loading profile:', error);
-            alert('Error loading profile. Please try again.');
-            window.location.href = '/';
-        }
     }
 
     // Handle profile photo upload
@@ -607,17 +578,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Error deleting account:', error);
                 alert('Error deleting account. Check the console for details.');
             }
-        });
-    }
-
-    // Handle back to home from profile
-    const backToHomeFromProfileBtn = document.getElementById('back-to-home-from-profile-btn');
-    if (backToHomeFromProfileBtn) {
-        backToHomeFromProfileBtn.addEventListener('click', () => {
-            document.querySelectorAll('section').forEach(section => section.style.display = 'block');
-            const profileSection = document.getElementById('profile-section');
-            profileSection.style.display = 'none';
-            window.history.pushState({}, '', '/');
         });
     }
 
