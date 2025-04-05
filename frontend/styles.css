@@ -3,14 +3,17 @@ body {
     font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #000;
-    color: #fff;
+    background-color: #E3ECD8; /* Light green background for the site */
+    color: #333; /* Dark text for contrast */
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    background-color: #fff; /* White background for the main content box */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
 }
 
 /* Hamburger Menu */
@@ -24,13 +27,13 @@ body {
 .hamburger-icon {
     cursor: pointer;
     font-size: 24px;
-    color: #fff;
+    color: #333;
 }
 
 .menu-content {
     display: none;
     position: absolute;
-    background-color: #333;
+    background: #fff; /* White background */
     min-width: 160px;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
@@ -38,7 +41,7 @@ body {
 }
 
 .menu-content a {
-    color: white;
+    color: #333;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
@@ -46,7 +49,7 @@ body {
 }
 
 .menu-content a:hover {
-    background-color: #555;
+    background-color: #f0f0f0; /* Light gray for hover */
 }
 
 .hamburger-menu.active .menu-content {
@@ -57,9 +60,10 @@ body {
 header {
     text-align: center;
     padding: 40px 0;
-    background-color: #4a7c59;
+    background: linear-gradient(to right, #A1CFB3, #6FA17C); /* Lighter green to darker green gradient */
     border-radius: 10px;
     margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
 }
 
 header img {
@@ -72,26 +76,27 @@ header h1 {
     font-size: 48px;
     font-weight: 700;
     margin: 0;
-    color: #fff;
+    color: #fff; /* White text */
 }
 
 header p {
     font-size: 18px;
-    color: #ccc;
+    color: #fff; /* White text */
     margin: 10px 0 0;
 }
 
 /* Announcement Bar */
 .announcement-bar {
-    background-color: #4a7c59;
+    background: #fff; /* White background */
     padding: 10px;
     text-align: center;
     border-radius: 5px;
     margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
 }
 
 .announcement-text {
-    color: white;
+    color: #333; /* Dark text to match the theme */
     font-size: 16px;
     margin: 0;
 }
@@ -100,27 +105,30 @@ header p {
 h2 {
     font-size: 28px;
     font-weight: 600;
-    color: #fff;
-    border-bottom: 2px solid #4a7c59;
-    padding-bottom: 5px;
+    color: #4a7c59;
     margin-bottom: 20px;
+    text-align: center;
 }
 
 h3 {
     font-size: 20px;
     font-weight: 500;
-    color: #fff;
+    color: #333;
     margin-bottom: 15px;
 }
 
 /* How to Play Section */
 #how-to-play-section {
     margin-bottom: 40px;
+    background: #fff; /* White background */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
 }
 
 #how-to-play-section p {
     font-size: 16px;
-    color: #ccc;
+    color: #333;
     margin-bottom: 20px;
 }
 
@@ -130,7 +138,7 @@ h3 {
 
 #how-to-play-section li {
     font-size: 16px;
-    color: #fff;
+    color: #333;
     margin-bottom: 15px;
     line-height: 1.5;
 }
@@ -148,70 +156,67 @@ h3 {
 
 #how-to-play-section center p {
     font-size: 16px;
-    color: #ccc;
+    color: #333;
 }
 
 /* Leaderboard and Season Rewards Sections */
 #leaderboard-section,
 #season-rewards-section {
     margin-bottom: 40px;
+    background: #fff; /* White background */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
 }
 
 #season-winners p {
     font-size: 16px;
-    color: #fff;
+    color: #333;
     margin: 5px 0;
+    text-align: center;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    background-color: #222;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    background-color: #fff;
     margin-top: 20px;
 }
 
 th, td {
     padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #ddd;
 }
 
 th {
-    background-color: #4a7c59;
+    background: linear-gradient(to right, #4a7c59, #3a6347); /* Green gradient */
     color: white;
     font-weight: 600;
 }
 
 td {
-    color: #fff;
-}
-
-tr:nth-child(even) {
-    background-color: #2a2a2a;
-}
-
-tr:hover {
-    background-color: #333;
+    color: #333;
 }
 
 /* Footer */
 footer {
     text-align: center;
     padding: 20px 0;
-    background-color: #111;
-    color: #ccc;
+    background: #fff; /* White background */
+    color: #666;
     font-size: 14px;
+    box-shadow: 0 -4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
 }
 
 /* Original styles for sign-up and sign-in forms (pre-beautification) */
 #auth-section {
     max-width: 500px;
     margin: 0 auto 40px;
-    background-color: #222;
+    background: #fff; /* White background */
     padding: 20px;
     border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
 }
 
 #auth-toggle {
@@ -237,7 +242,7 @@ footer {
 #signup-form-container h2,
 #signin-form-container h2 {
     text-align: center;
-    color: #fff;
+    color: #4a7c59;
     margin-bottom: 20px;
     font-size: 1.5em;
 }
@@ -252,7 +257,7 @@ footer {
 #signup-form label,
 #signin-form label {
     font-size: 1em;
-    color: #fff;
+    color: #333;
 }
 
 #signup-form input[type="text"],
@@ -260,10 +265,10 @@ footer {
 #signin-form input[type="text"],
 #signin-form input[type="password"] {
     padding: 8px;
-    border: 1px solid #444;
+    border: 1px solid #ddd;
     border-radius: 4px;
-    background-color: #333;
-    color: #fff;
+    background-color: #f0f0f0;
+    color: #333;
     width: 100%;
     box-sizing: border-box;
 }
@@ -297,15 +302,19 @@ footer {
 #next-steps-section {
     text-align: center;
     margin-bottom: 40px;
+    background: #fff; /* White background */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
 }
 
 #next-steps-section h2 {
-    color: #fff;
-    border-bottom: 2px solid #4a7c59;
+    color: #4a7c59;
+    margin-bottom: 20px;
 }
 
 #next-steps-section p {
-    color: #ccc;
+    color: #333;
     font-size: 16px;
 }
 
@@ -328,20 +337,20 @@ footer {
 #profile-section {
     max-width: 600px;
     margin: 0 auto;
-    background-color: #222;
+    background: #fff; /* White background */
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     margin-bottom: 40px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
 }
 
 #profile-section h2 {
-    color: #fff;
-    border-bottom: 2px solid #4a7c59;
+    color: #4a7c59;
+    margin-bottom: 20px;
 }
 
 #profile-section p {
-    color: #fff;
+    color: #333;
     font-size: 16px;
 }
 
@@ -355,9 +364,9 @@ footer {
 }
 
 #profile-section input[type="file"] {
-    background-color: #333;
-    color: #fff;
-    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
 }
 
 #signout-btn,
@@ -389,29 +398,29 @@ footer {
 #admin-panel {
     max-width: 600px;
     margin: 0 auto;
-    background-color: #222;
+    background: #fff; /* White background */
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     margin-bottom: 40px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
 }
 
 #admin-panel h2,
 #admin-panel h3 {
-    color: #fff;
-    border-bottom: 2px solid #4a7c59;
+    color: #4a7c59;
+    margin-bottom: 20px;
 }
 
 #admin-panel p {
-    color: #ccc;
+    color: #333;
     font-size: 16px;
 }
 
 #admin-panel input[type="password"],
 #admin-panel textarea {
-    background-color: #333;
-    color: #fff;
-    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
     padding: 8px;
     border-radius: 4px;
     width: 100%;
