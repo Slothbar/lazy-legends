@@ -28,35 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle profile link in hamburger menu
-    const profileLink = document.getElementById('profile-link');
-    if (profileLink) {
-        profileLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            try {
-                const response = await fetch('/api/whoami', {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    const username = data.xUsername;
-                    window.location.href = `/profile/${username}`;
-                } else {
-                    alert('Please sign in to view your profile.');
-                    document.querySelectorAll('section').forEach(section => section.style.display = 'block');
-                    const authSection = document.getElementById('auth-section');
-                    authSection.style.display = 'block';
-                    const nextStepsSection = document.getElementById('next-steps-section');
-                    nextStepsSection.style.display = 'none';
-                    hamburgerMenu.classList.remove('active');
-                }
-            } catch (error) {
-                console.error('Error checking user session:', error);
-                alert('Error checking user session. Please sign in again.');
-            }
-        });
-    }
-
     // Handle admin panel login
     const adminLink = document.getElementById('admin-link');
     const adminPanel = document.getElementById('admin-panel');
@@ -470,6 +441,34 @@ document.addEventListener('DOMContentLoaded', () => {
             const tweetText = encodeURIComponent('Just napping like a sloth on a sunny day! #LazyLegends');
             const tweetUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
             window.open(tweetUrl, '_blank');
+        });
+    }
+
+    // Handle "View Profile" button in Next Steps
+    const viewProfileBtn = document.getElementById('view-profile-btn');
+    if (viewProfileBtn) {
+        viewProfileBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/whoami', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const username = data.xUsername;
+                    window.location.href = `/profile/${username}`;
+                } else {
+                    alert('Please sign in to view your profile.');
+                    document.querySelectorAll('section').forEach(section => section.style.display = 'block');
+                    const authSection = document.getElementById('auth-section');
+                    authSection.style.display = 'block';
+                    const nextStepsSection = document.getElementById('next-steps-section');
+                    nextStepsSection.style.display = 'none';
+                    hamburgerMenu.classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Error checking user session:', error);
+                alert('Error checking user session. Please sign in again.');
+            }
         });
     }
 
