@@ -6,7 +6,7 @@ const db = require('./database.js');
 const path = require('path');
 const session = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
-const bcrypt = require('bcryptjs'); // Changed from 'bcrypt' to 'bcryptjs'
+const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const fs = require('fs');
 
@@ -266,6 +266,47 @@ app.post('/api/signout', (req, res) => {
     });
 });
 
+// Delete account endpoint
+app.post('/api/delete-account', (req, res) => {
+    if (!req.session.xUsername) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
+    const username = req.session.xUsername;
+
+    // Delete user from season_rewards first (due to foreign key constraint)
+    db.run(
+        `DELETE FROM season_rewards WHERE xUsername = ?`,
+        [username],
+        (err) => {
+            if (err) {
+                console.error('Error deleting user from season_rewards:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+
+            // Delete user from users table
+            db.run(
+                `DELETE FROM users WHERE xUsername = ?`,
+                [username],
+                (err) => {
+                    if (err) {
+                        console.error('Error deleting user:', err);
+                        return res.status(500).json({ error: 'Database error' });
+                    }
+                    req.session.destroy((err) => {
+                        if (err) {
+                            console.error('Error destroying session:', err);
+                            return res.status(500).json({ error: 'Error signing out after deletion' });
+                        }
+                        console.log(`Deleted user ${username} from the system`);
+                        res.status(200).json({ message: 'Account deleted successfully' });
+                    });
+                }
+            );
+        }
+    );
+});
+
 // Get user profile data
 app.get('/api/profile/:username', (req, res) => {
     const { username } = req.params;
@@ -336,7 +377,7 @@ app.get('/api/whoami', (req, res) => {
 
 app.get('/api/leaderboard', (req, res) => {
     db.all(
-        `SELECT xUsername, sloMoPoints FROM users ORDER BY sloMoPoints DESC LIMIT 10`,
+        `SELECT xUsername, sloMoPoints, profilePhoto FROM users ORDER BY sloMoPoints DESC LIMIT 10`,
         [],
         (err, rows) => {
             if (err) return res.status(500).json({ error: 'Database error' });
@@ -562,9 +603,9 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
                     console.log('Top players before season end:', topPlayers);
 
                     const rewards = [
-                        { rank: 1, amount: 100 },
-                        { rank: 2, amount: 50 },
-                        { rank: 3, amount: 25 }
+                        { rank: 1, amount: topPlayers[0] ? topPlayers[0].sloMoPoints * 500 : 0 },
+                        { rank: 2, amount: topPlayers[1] ? topPlayers[1].sloMoPoints * 500 : 0 },
+                        { rank: 3, amount: topPlayers[2] ? topPlayers[2].sloMoPoints * 500 : 0 }
                     ];
 
                     const insertStmt = db.prepare(`
@@ -573,7 +614,7 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
                     `);
                     topPlayers.forEach((player, index) => {
                         const reward = rewards[index];
-                        if (reward) {
+                        if (reward && reward.amount > 0) {
                             insertStmt.run(currentSeasonId, player.xUsername, reward.rank, reward.amount);
                         }
                     });
