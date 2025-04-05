@@ -28,6 +28,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Handle profile link in hamburger menu
+    const profileLink = document.getElementById('profile-link');
+    if (profileLink) {
+        profileLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/whoami', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const username = data.xUsername;
+                    window.location.href = `/profile/${username}`;
+                } else {
+                    alert('Please sign in to view your profile.');
+                    document.querySelectorAll('section').forEach(section => section.style.display = 'block');
+                    const authSection = document.getElementById('auth-section');
+                    authSection.style.display = 'block';
+                    const nextStepsSection = document.getElementById('next-steps-section');
+                    nextStepsSection.style.display = 'none';
+                    hamburgerMenu.classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Error checking user session:', error);
+                alert('Error checking user session. Please sign in again.');
+            }
+        });
+    }
+
     // Handle admin panel login
     const adminLink = document.getElementById('admin-link');
     const adminPanel = document.getElementById('admin-panel');
@@ -87,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminPanel.style.display = 'none';
             adminLogin.style.display = 'block';
             adminControls.style.display = 'none';
-            adminUsers.style.display = 'none';
+            adminUsers.style.display = "none";
             adminAnnouncement.style.display = 'none';
             adminPasswordInput.value = '';
             window.history.pushState({}, '', '/');
@@ -434,31 +463,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle "View Your Profile" button
-    const viewProfileBtn = document.getElementById('view-profile-btn');
-    if (viewProfileBtn) {
-        viewProfileBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            try {
-                const response = await fetch('/api/whoami', {
-                    credentials: 'include'
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    const username = data.xUsername;
-                    window.location.href = `/profile/${username}`;
-                } else {
-                    alert('Please sign in to view your profile.');
-                    authSection.style.display = 'block';
-                    nextStepsSection.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error checking user session:', error);
-                alert('Error checking user session. Please sign in again.');
-            }
-        });
-    }
-
     // Handle "Tweet Now" button
     const tweetNowBtn = document.getElementById('tweet-now-btn');
     if (tweetNowBtn) {
@@ -539,6 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     uploadFeedback.style.color = '#4a7c59';
                     uploadFeedback.textContent = 'Profile photo uploaded successfully!';
                     photoInput.value = ''; // Clear the file input
+                    fetchLeaderboard(); // Refresh leaderboard to show thumbnail
                 } else {
                     const errorData = await response.json();
                     uploadFeedback.style.display = 'block';
@@ -573,6 +578,35 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error('Error signing out:', error);
                 alert('Error signing out. Check the console for details.');
+            }
+        });
+    }
+
+    // Handle account deletion
+    const deleteAccountBtn = document.getElementById('delete-account-btn');
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/delete-account', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    alert('Account deleted successfully.');
+                    window.location.href = '/';
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                alert('Error deleting account. Check the console for details.');
             }
         });
     }
@@ -626,9 +660,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (rank === 3) rankDisplay = '🥉 3';
 
                 const row = document.createElement('tr');
+                const thumbnail = entry.profilePhoto ? `<img src="${entry.profilePhoto}" alt="${entry.xUsername}'s photo" class="profile-thumbnail">` : '';
                 row.innerHTML = `
                     <td>${rankDisplay}</td>
-                    <td>${entry.xUsername}</td>
+                    <td>${thumbnail}${entry.xUsername}</td>
                     <td>${entry.sloMoPoints}</td>
                 `;
                 leaderboardBody.appendChild(row);
@@ -664,6 +699,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.winners.length === 0) {
                     seasonWinnersDiv.innerHTML = '<p>No previous seasons yet. Keep posting to win!</p>';
                 } else {
+                    // Sort winners by rank in ascending order (Rank 1 first)
+                    data.winners.sort((a, b) => a.rank - b.rank);
                     data.winners.forEach(winner => {
                         const winnerText = `Rank ${winner.rank}: ${winner.xUsername} - ${winner.rewardAmount} $SLOTH`;
                         const p = document.createElement('p');
