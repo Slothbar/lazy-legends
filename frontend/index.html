@@ -32,43 +32,63 @@
             <p>Chill, Post, Earn $SLOTH with #LazyLegends</p>
         </header>
 
-        <section id="profile-section">
-            <center><h2>Join the Sloth Squad in 2 Easy Steps! 🦥</h2></center>
-            <div class="profile-header">
-               <a href="https://ibb.co/n8BwdtwT"><img src="https://i.ibb.co/n8BwdtwT/Twitter-X-Logo.png" alt="Twitter-X-Logo" border="0"></a>
-                <p>Step 1: Link your X profile to join the fun!</p>
+       <section id="auth-section">
+            <div id="auth-toggle">
+                <button id="show-signup-btn">Sign Up</button>
+                <button id="show-signin-btn">Sign In</button>
             </div>
-            <form id="profile-form-step1">
-                <div class="input-group">
-                    <p class="field-info">We use your X username to track your #LazyLegends posts for SloMo Points.</p>
-                    <input type="text" id="x-username" placeholder="Your X Username (e.g., @LazySloth)" required>
-                    <span class="tooltip">Your X username must start with @ and contain only letters, numbers, or underscores.</span>
-                </div>
-                <button type="submit">Next</button>
-            </form>
-            <form id="profile-form-step2" style="display: none;">
-                <div class="input-group">
-                    <p>Step 2: (Optional) Add your Hedera wallet address to be eligible for season rewards and get 5 bonus SloMo Points!</p>
-                    <p class="field-info">We use your wallet address to track season winners and distribute rewards. It’s securely stored and does not grant us access to your wallet. <a href="/privacy-policy" target="_blank">Learn more</a>.</p>
-                    <input type="text" id="hedera-wallet" placeholder="Hedera Wallet Address (e.g., 0.0.12345)">
-                    <span class="tooltip">Wallet address must start with 0.0. followed by numbers. Skip if you’re not ready to share.</span>
-                    <span class="security-note">🔒 This form is secured with HTTPS encryption.</span>
-                </div>
-                <div class="form-buttons">
-                    <button type="submit" id="submit-profile-btn">Submit</button>
-                    <button type="button" id="skip-wallet-btn">Skip</button>
-                </div>
-            </form>
-            <div id="form-feedback" style="display: none;"></div>
+
+            <div id="signup-form-container">
+                <h2>Sign Up</h2>
+                <form id="signup-form">
+                    <label for="signup-x-username">X Username:</label>
+                    <input type="text" id="signup-x-username" name="x-username" placeholder="@slothhbar" required>
+                    <label for="signup-password">Password:</label>
+                    <input type="password" id="signup-password" name="password" placeholder="At least 8 characters" required>
+                    <label for="signup-hedera-wallet">Hedera Wallet Address (Optional):</label>
+                    <input type="text" id="signup-hedera-wallet" name="hedera-wallet" placeholder="0.0.12345">
+                    <button type="submit">Sign Up</button>
+                </form>
+                <p id="signup-feedback" style="display: none;"></p>
+            </div>
+
+            <div id="signin-form-container" style="display: none;">
+                <h2>Sign In</h2>
+                <form id="signin-form">
+                    <label for="signin-x-username">X Username:</label>
+                    <input type="text" id="signin-x-username" name="x-username" placeholder="@slothhbar" required>
+                    <label for="signin-password">Password:</label>
+                    <input type="password" id="signin-password" name="password" required>
+                    <button type="submit">Sign In</button>
+                </form>
+                <p id="signin-feedback" style="display: none;"></p>
+            </div>
         </section>
 
         <section id="next-steps-section" style="display: none;">
-            <h2>Next Steps 🦥</h2>
-            <p>Now that you’re linked, post a tweet with #LazyLegends to earn 2 SloMo Points!</p>
-            <p>Need inspiration? Try a chill message like: "Just napping like a sloth on a sunny day! #LazyLegends"</p>
+            <h2>Next Steps</h2>
+            <p>Start posting on X with the hashtag #LazyLegends to earn SloMo Points and climb the leaderboard!</p>
             <button id="tweet-now-btn">Tweet Now</button>
+            <a href="#" id="view-profile-btn">View Your Profile</a>
         </section>
 
+        <section id="profile-section" style="display: none;">
+            <h2>Your Profile</h2>
+            <p><strong>X Username:</strong> <span id="profile-x-username"></span></p>
+            <p><strong>Hedera Wallet:</strong> <span id="profile-hedera-wallet"></span></p>
+            <p><strong>SloMo Points:</strong> <span id="profile-slo-mo-points"></span></p>
+            <div id="profile-photo-container">
+                <h3>Profile Photo</h3>
+                <img id="profile-photo" src="" alt="Profile Photo" style="display: none; max-width: 200px;">
+                <form id="upload-photo-form">
+                    <input type="file" id="profile-photo-input" name="photo" accept="image/*">
+                    <button type="submit">Upload Photo</button>
+                </form>
+                <p id="upload-feedback" style="display: none;"></p>
+            </div>
+            <button id="signout-btn">Sign Out</button>
+            <button id="back-to-home-from-profile-btn">Back to Home</button>
+        </section>
         <section id="how-to-play-section">
             <center><h2>How to Play Lazy Legends</h2></center>
             <p>Join the Chill2Earn fun and earn $SLOTH—here’s how:</p>
