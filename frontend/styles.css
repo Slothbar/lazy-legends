@@ -523,4 +523,63 @@ footer {
         font-size: 1em;
         padding: 10px 0;
     }
+    #auth-toggle {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#auth-toggle button {
+    margin: 0 10px;
+    background-color: #666;
+}
+
+#auth-toggle button:hover {
+    background-color: #555;
+}
+
+#signup-feedback,
+#signin-feedback,
+#upload-feedback {
+    margin-top: 10px;
+    text-align: center;
+}
+
+#next-steps-section {
+    text-align: center;
+}
+
+#next-steps-section a {
+    display: inline-block;
+    margin-top: 10px;
+    color: #4a7c59;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#next-steps-section a:hover {
+    text-decoration: underline;
+}
+
+#profile-section {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#profile-photo-container {
+    margin-top: 20px;
+}
+
+#profile-photo {
+    display: block;
+    margin: 10px 0;
+}
+
+#signout-btn {
+    background-color: #d9534f;
+    margin-top: 20px;
+}
+
+#signout-btn:hover {
+    background-color: #c9302c;
+}
 }
