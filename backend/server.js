@@ -6,7 +6,7 @@ const db = require('./database.js');
 const path = require('path');
 const session = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs'); // Changed from 'bcrypt' to 'bcryptjs'
 const multer = require('multer');
 const fs = require('fs');
 
