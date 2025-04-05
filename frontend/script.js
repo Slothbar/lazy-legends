@@ -8,6 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load season winners on page load
     fetchSeasonWinners();
 
+    // Check if the user is on a profile page
+    const path = window.location.pathname;
+    if (path.startsWith('/profile/')) {
+        const username = path.split('/profile/')[1];
+        if (username) {
+            loadProfilePage(username);
+        }
+    }
+
     // Handle hamburger menu toggle
     const hamburgerMenu = document.querySelector('.hamburger-menu');
     const hamburgerIcon = document.querySelector('.hamburger-icon');
@@ -81,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminUsers.style.display = 'none';
             adminAnnouncement.style.display = 'none';
             adminPasswordInput.value = '';
+            window.history.pushState({}, '', '/');
         });
     }
 
@@ -125,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     alert('Successfully reset the leaderboard and started a new season!');
                     fetchLeaderboard();
-                    fetchSeasonWinners(); // Refresh season winners after reset
+                    fetchSeasonWinners();
                 } else {
                     const errorData = await response.json();
                     alert(`Error: ${errorData.error || 'Unknown error'}`);
@@ -228,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (response.ok) {
                     alert('Announcement updated successfully!');
-                    fetchAnnouncement(); // Refresh the announcement bar
+                    fetchAnnouncement();
                     adminAnnouncement.style.display = 'none';
                     adminControls.style.display = 'block';
                 } else {
@@ -256,105 +266,196 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Handle profile form submission (Step 1: X Username)
-    const profileFormStep1 = document.getElementById('profile-form-step1');
-    const profileFormStep2 = document.getElementById('profile-form-step2');
-    const formFeedback = document.getElementById('form-feedback');
-    const nextStepsSection = document.getElementById('next-steps-section');
-    const profileSection = document.getElementById('profile-section');
+    // Handle sign-up and sign-in form toggling
+    const showSignupBtn = document.getElementById('show-signup-btn');
+    const showSigninBtn = document.getElementById('show-signin-btn');
+    const signupFormContainer = document.getElementById('signup-form-container');
+    const signinFormContainer = document.getElementById('signin-form-container');
 
-    if (profileFormStep1) {
-        profileFormStep1.addEventListener('submit', (e) => {
+    if (showSignupBtn) {
+        showSignupBtn.addEventListener('click', () => {
+            signupFormContainer.style.display = 'block';
+            signinFormContainer.style.display = 'none';
+        });
+    }
+
+    if (showSigninBtn) {
+        showSigninBtn.addEventListener('click', () => {
+            signupFormContainer.style.display = 'none';
+            signinFormContainer.style.display = 'block';
+        });
+    }
+
+    // Handle sign-up form submission
+    const signupForm = document.getElementById('signup-form');
+    const signupFeedback = document.getElementById('signup-feedback');
+    const nextStepsSection = document.getElementById('next-steps-section');
+    const authSection = document.getElementById('auth-section');
+
+    if (signupForm) {
+        signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const xUsernameInput = document.getElementById('x-username');
-            let xUsername = xUsernameInput.value.trim();
+            const xUsername = document.getElementById('signup-x-username').value.trim();
+            const password = document.getElementById('signup-password').value.trim();
+            const hederaWallet = document.getElementById('signup-hedera-wallet').value.trim();
 
             // Auto-prepend @ if missing
-            if (!xUsername.startsWith('@')) {
-                xUsername = '@' + xUsername;
-                xUsernameInput.value = xUsername;
+            let normalizedXUsername = xUsername;
+            if (!normalizedXUsername.startsWith('@')) {
+                normalizedXUsername = '@' + normalizedXUsername;
+                document.getElementById('signup-x-username').value = normalizedXUsername;
             }
 
             // Validate X username
             const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
-            if (!xUsernameRegex.test(xUsername)) {
-                formFeedback.style.display = 'block';
-                formFeedback.style.color = '#d9534f';
-                formFeedback.textContent = 'Invalid X username! It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).';
+            if (!xUsernameRegex.test(normalizedXUsername)) {
+                signupFeedback.style.display = 'block';
+                signupFeedback.style.color = '#d9534f';
+                signupFeedback.textContent = 'Invalid X username! It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).';
                 return;
             }
 
-            // Move to Step 2
-            profileFormStep1.style.display = 'none';
-            profileFormStep2.style.display = 'block';
-            formFeedback.style.display = 'none';
-        });
-    }
+            // Validate password
+            if (password.length < 8) {
+                signupFeedback.style.display = 'block';
+                signupFeedback.style.color = '#d9534f';
+                signupFeedback.textContent = 'Password must be at least 8 characters long!';
+                return;
+            }
 
-    // Handle profile form submission (Step 2: Wallet Address)
-    if (profileFormStep2) {
-        profileFormStep2.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const xUsername = document.getElementById('x-username').value.trim();
-            const hederaWallet = document.getElementById('hedera-wallet').value.trim();
-
-            // Validate wallet address if provided
+            // Validate Hedera wallet address if provided
             let walletAddress = hederaWallet || 'N/A';
             if (hederaWallet) {
                 const walletRegex = /^0\.0\.\d+$/;
                 if (!walletRegex.test(hederaWallet)) {
-                    formFeedback.style.display = 'block';
-                    formFeedback.style.color = '#d9534f';
-                    formFeedback.textContent = 'Invalid Hedera wallet address! It must start with 0.0. followed by numbers (e.g., 0.0.12345).';
+                    signupFeedback.style.display = 'block';
+                    signupFeedback.style.color = '#d9534f';
+                    signupFeedback.textContent = 'Invalid Hedera wallet address! It must start with 0.0. followed by numbers (e.g., 0.0.12345).';
                     return;
                 }
                 walletAddress = hederaWallet;
             }
 
             try {
-                const response = await fetch('/api/profile', {
+                const response = await fetch('/api/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ xUsername, hederaWallet: walletAddress }),
-                    credentials: 'include' // Include cookies
+                    body: JSON.stringify({ xUsername: normalizedXUsername, password, hederaWallet: walletAddress }),
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
-                    const bonusPoints = walletAddress !== 'N/A' ? 5 : 0;
-                    const feedbackMessage = walletAddress !== 'N/A'
-                        ? `Welcome ${xUsername}! You’ve earned 5 bonus SloMo Points for linking your wallet address. Start posting #LazyLegends to climb the leaderboard!`
-                        : `Welcome ${xUsername}! You’re ready to start posting #LazyLegends. Add your wallet address later to be eligible for season rewards!`;
-                    formFeedback.style.display = 'block';
-                    formFeedback.style.color = '#4a7c59';
-                    formFeedback.textContent = feedbackMessage;
-                    profileFormStep2.style.display = 'none';
-                    profileFormStep1.style.display = 'none';
-                    profileFormStep1.reset();
-                    profileFormStep2.reset();
+                    signupFeedback.style.display = 'block';
+                    signupFeedback.style.color = '#4a7c59';
+                    signupFeedback.textContent = `Welcome ${normalizedXUsername}! Start posting #LazyLegends to climb the leaderboard!`;
+                    signupForm.reset();
+                    authSection.style.display = 'none';
                     nextStepsSection.style.display = 'block';
-                    fetchLeaderboard(); // Refresh leaderboard
-                    fetchSeasonWinners(); // Refresh season winners to check eligibility
+                    fetchLeaderboard();
+                    fetchSeasonWinners();
                 } else {
                     const errorData = await response.json();
-                    formFeedback.style.display = 'block';
-                    formFeedback.style.color = '#d9534f';
-                    formFeedback.textContent = `Error saving profile: ${errorData.error || 'Unknown error'}`;
+                    signupFeedback.style.display = 'block';
+                    signupFeedback.style.color = '#d9534f';
+                    signupFeedback.textContent = `Error: ${errorData.error || 'Unknown error'}`;
                 }
             } catch (error) {
-                console.error('Error submitting profile:', error);
-                formFeedback.style.display = 'block';
-                formFeedback.style.color = '#d9534f';
-                formFeedback.textContent = 'Error saving profile. Check the console for details.';
+                console.error('Error during sign-up:', error);
+                signupFeedback.style.display = 'block';
+                signupFeedback.style.color = '#d9534f';
+                signupFeedback.textContent = 'Error during sign-up. Check the console for details.';
             }
         });
     }
 
-    // Handle skipping the wallet address
-    const skipWalletBtn = document.getElementById('skip-wallet-btn');
-    if (skipWalletBtn) {
-        skipWalletBtn.addEventListener('click', () => {
-            document.getElementById('hedera-wallet').value = '';
-            profileFormStep2.dispatchEvent(new Event('submit'));
+    // Handle sign-in form submission
+    const signinForm = document.getElementById('signin-form');
+    const signinFeedback = document.getElementById('signin-feedback');
+
+    if (signinForm) {
+        signinForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const xUsername = document.getElementById('signin-x-username').value.trim();
+            const password = document.getElementById('signin-password').value.trim();
+
+            // Auto-prepend @ if missing
+            let normalizedXUsername = xUsername;
+            if (!normalizedXUsername.startsWith('@')) {
+                normalizedXUsername = '@' + normalizedXUsername;
+                document.getElementById('signin-x-username').value = normalizedXUsername;
+            }
+
+            // Validate X username
+            const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
+            if (!xUsernameRegex.test(normalizedXUsername)) {
+                signinFeedback.style.display = 'block';
+                signinFeedback.style.color = '#d9534f';
+                signinFeedback.textContent = 'Invalid X username! It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).';
+                return;
+            }
+
+            // Validate password
+            if (!password) {
+                signinFeedback.style.display = 'block';
+                signinFeedback.style.color = '#d9534f';
+                signinFeedback.textContent = 'Password is required!';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/signin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ xUsername: normalizedXUsername, password }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    signinFeedback.style.display = 'block';
+                    signinFeedback.style.color = '#4a7c59';
+                    signinFeedback.textContent = `Welcome back ${normalizedXUsername}!`;
+                    signinForm.reset();
+                    authSection.style.display = 'none';
+                    nextStepsSection.style.display = 'block';
+                    fetchLeaderboard();
+                    fetchSeasonWinners();
+                } else {
+                    const errorData = await response.json();
+                    signinFeedback.style.display = 'block';
+                    signinFeedback.style.color = '#d9534f';
+                    signinFeedback.textContent = `Error: ${errorData.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                console.error('Error during sign-in:', error);
+                signinFeedback.style.display = 'block';
+                signinFeedback.style.color = '#d9534f';
+                signinFeedback.textContent = 'Error during sign-in. Check the console for details.';
+            }
+        });
+    }
+
+    // Handle "View Your Profile" button
+    const viewProfileBtn = document.getElementById('view-profile-btn');
+    if (viewProfileBtn) {
+        viewProfileBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/api/whoami', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const username = data.xUsername;
+                    window.location.href = `/profile/${username}`;
+                } else {
+                    alert('Please sign in to view your profile.');
+                    authSection.style.display = 'block';
+                    nextStepsSection.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking user session:', error);
+                alert('Error checking user session. Please sign in again.');
+            }
         });
     }
 
@@ -368,10 +469,129 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Handle profile page loading
+    async function loadProfilePage(username) {
+        try {
+            const response = await fetch(`/api/profile/${username}`, {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                document.querySelectorAll('section').forEach(section => section.style.display = 'none');
+                const profileSection = document.getElementById('profile-section');
+                profileSection.style.display = 'block';
+
+                document.getElementById('profile-x-username').textContent = userData.xUsername;
+                document.getElementById('profile-hedera-wallet').textContent = userData.hederaWallet || 'N/A';
+                document.getElementById('profile-slo-mo-points').textContent = userData.sloMoPoints;
+
+                const profilePhoto = document.getElementById('profile-photo');
+                if (userData.profilePhoto) {
+                    profilePhoto.src = userData.profilePhoto;
+                    profilePhoto.style.display = 'block';
+                } else {
+                    profilePhoto.style.display = 'none';
+                }
+            } else {
+                const errorData = await response.json();
+                alert(errorData.error || 'Error loading profile.');
+                window.location.href = '/';
+            }
+        } catch (error) {
+            console.error('Error loading profile:', error);
+            alert('Error loading profile. Please try again.');
+            window.location.href = '/';
+        }
+    }
+
+    // Handle profile photo upload
+    const uploadPhotoForm = document.getElementById('upload-photo-form');
+    const uploadFeedback = document.getElementById('upload-feedback');
+
+    if (uploadPhotoForm) {
+        uploadPhotoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const photoInput = document.getElementById('profile-photo-input');
+            if (!photoInput.files || photoInput.files.length === 0) {
+                uploadFeedback.style.display = 'block';
+                uploadFeedback.style.color = '#d9534f';
+                uploadFeedback.textContent = 'Please select a photo to upload.';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('photo', photoInput.files[0]);
+
+            try {
+                const response = await fetch('/api/upload-photo', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const profilePhoto = document.getElementById('profile-photo');
+                    profilePhoto.src = data.photoUrl;
+                    profilePhoto.style.display = 'block';
+                    uploadFeedback.style.display = 'block';
+                    uploadFeedback.style.color = '#4a7c59';
+                    uploadFeedback.textContent = 'Profile photo uploaded successfully!';
+                    photoInput.value = ''; // Clear the file input
+                } else {
+                    const errorData = await response.json();
+                    uploadFeedback.style.display = 'block';
+                    uploadFeedback.style.color = '#d9534f';
+                    uploadFeedback.textContent = `Error: ${errorData.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+                uploadFeedback.style.display = 'block';
+                uploadFeedback.style.color = '#d9534f';
+                uploadFeedback.textContent = 'Error uploading photo. Check the console for details.';
+            }
+        });
+    }
+
+    // Handle sign-out
+    const signoutBtn = document.getElementById('signout-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/signout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    alert('Signed out successfully!');
+                    window.location.href = '/';
+                } else {
+                    alert('Error signing out. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error signing out:', error);
+                alert('Error signing out. Check the console for details.');
+            }
+        });
+    }
+
+    // Handle back to home from profile
+    const backToHomeFromProfileBtn = document.getElementById('back-to-home-from-profile-btn');
+    if (backToHomeFromProfileBtn) {
+        backToHomeFromProfileBtn.addEventListener('click', () => {
+            document.querySelectorAll('section').forEach(section => section.style.display = 'block');
+            const profileSection = document.getElementById('profile-section');
+            profileSection.style.display = 'none';
+            window.history.pushState({}, '', '/');
+        });
+    }
+
     async function fetchAnnouncement() {
         try {
             const response = await fetch('/api/admin/announcement', {
-                credentials: 'include' // Include cookies
+                credentials: 'include'
             });
             if (response.ok) {
                 const data = await response.json();
@@ -392,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchLeaderboard() {
         try {
             const response = await fetch('/api/leaderboard', {
-                credentials: 'include' // Include cookies
+                credentials: 'include'
             });
             const leaderboard = await response.json();
             const leaderboardBody = document.getElementById('leaderboard-body');
@@ -422,7 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // First, fetch the logged-in user's xUsername
             const whoamiResponse = await fetch('/api/whoami', {
-                credentials: 'include' // Include cookies
+                credentials: 'include'
             });
             let xUsername = null;
             if (whoamiResponse.ok) {
@@ -433,7 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const response = await fetch('/api/season-winners', {
-                credentials: 'include' // Include cookies
+                credentials: 'include'
             });
             const seasonWinnersDiv = document.getElementById('season-winners');
 
@@ -445,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     seasonWinnersDiv.innerHTML = '<p>No previous seasons yet. Keep posting to win!</p>';
                 } else {
                     data.winners.forEach(winner => {
-                        const winnerText = `Rank ${winner.rank}: ${winner.xUsername} - ${winner.rewardAmount} $SLOTH`; // Removed status
+                        const winnerText = `Rank ${winner.rank}: ${winner.xUsername} - ${winner.rewardAmount} $SLOTH`;
                         const p = document.createElement('p');
                         p.textContent = winnerText;
                         seasonWinnersDiv.appendChild(p);
