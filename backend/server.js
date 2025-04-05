@@ -6,14 +6,11 @@ const db = require('./database.js');
 const path = require('path');
 const session = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
-const { Client, TokenTransferTransaction, AccountId, PrivateKey, TokenAssociateTransaction } = require('@hashgraph/sdk');
 
 const app = express();
-
-// Configure CORS to allow credentials from your frontend domain
 app.use(cors({
-    origin: 'https://www.lazylegends.xyz', // Replace with your frontend domain
-    credentials: true // Allow cookies to be sent
+    origin: 'https://www.lazylegends.xyz',
+    credentials: true
 }));
 app.use(express.json());
 
@@ -27,14 +24,9 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'your-session-secret',
     resave: false,
     saveUninitialized: false,
-    cookie: {
-        secure: false, // Set to true in production with HTTPS
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: 'lax' // Adjust based on your needs
-    }
+    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax' }
 }));
 
-// Middleware to handle session errors
 app.use((err, req, res, next) => {
     if (err) {
         console.error('Session middleware error:', err);
@@ -57,38 +49,8 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID || 'your-spreadsheet-id-here';
 
 const X_BEARER_TOKEN = process.env.X_BEARER_TOKEN;
 
-// Hedera SDK setup
-const treasuryAccountId = process.env.TREASURY_ACCOUNT_ID;
-const treasuryPrivateKey = process.env.TREASURY_PRIVATE_KEY;
-const slothTokenId = process.env.SLOTH_TOKEN_ID;
-
-// Validate environment variables
-if (!treasuryAccountId || treasuryAccountId.includes('<your-treasury-account-id>')) {
-    throw new Error('TREASURY_ACCOUNT_ID environment variable is not set or invalid');
-}
-if (!treasuryPrivateKey || treasuryPrivateKey.includes('<your-treasury-private-key>')) {
-    throw new Error('TREASURY_PRIVATE_KEY environment variable is not set or invalid');
-}
-if (!slothTokenId || slothTokenId.includes('<your-sloth-token-id>')) {
-    throw new Error('SLOTH_TOKEN_ID environment variable is not set or invalid');
-}
-
-// Validate private key format
-let privateKey;
-try {
-    privateKey = PrivateKey.fromString(treasuryPrivateKey);
-    console.log('Private key successfully parsed');
-} catch (error) {
-    console.error('Error parsing TREASURY_PRIVATE_KEY:', error);
-    throw new Error('TREASURY_PRIVATE_KEY is invalid or malformed');
-}
-
-const client = Client.forMainnet(); // Using Mainnet
-client.setOperator(AccountId.fromString(treasuryAccountId), privateKey);
-
 const lastChecked = {};
 
-// Debug log to confirm ADMIN_PASSWORD value
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
 console.log('ADMIN_PASSWORD loaded:', ADMIN_PASSWORD);
 
@@ -110,46 +72,37 @@ async function appendToGoogleSheet(xUsername, hederaWallet) {
     }
 }
 
-app.post('/api/profile', async (req, res) => {
-    try {
-        const { xUsername, hederaWallet } = req.body;
+app.post('/api/profile', (req, res) => {
+    const { xUsername, hederaWallet } = req.body;
 
-        // Validate X username
-        const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
-        if (!xUsername || !xUsernameRegex.test(xUsername)) {
-            return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
-        }
-
-        // Normalize xUsername to lowercase for consistency
-        const normalizedXUsername = xUsername.toLowerCase();
-
-        // Add 5 bonus SloMo Points if wallet address is provided
-        const bonusPoints = hederaWallet !== 'N/A' ? 5 : 0;
-
-        db.run(
-            `INSERT INTO users (xUsername, hederaWallet, sloMoPoints) VALUES (?, ?, ?) ON CONFLICT(xUsername) DO UPDATE SET hederaWallet = ?, sloMoPoints = sloMoPoints + ?`,
-            [normalizedXUsername, hederaWallet, bonusPoints, hederaWallet, bonusPoints],
-            async (err) => {
-                if (err) {
-                    console.error('Error saving profile to database:', err);
-                    return res.status(500).json({ error: 'Database error' });
-                }
-                await appendToGoogleSheet(normalizedXUsername, hederaWallet);
-                // Store the xUsername in the session
-                req.session.xUsername = normalizedXUsername;
-                console.log(`Session set for user: ${normalizedXUsername}`);
-                res.status(200).json({ message: 'Profile saved' });
-            }
-        );
-    } catch (error) {
-        console.error('Error in /api/profile:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
+    // Validate X username
+    const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
+    if (!xUsername || !xUsernameRegex.test(xUsername)) {
+        return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
     }
+
+    // Normalize xUsername to lowercase for consistency
+    const normalizedXUsername = xUsername.toLowerCase();
+
+    // Add 5 bonus SloMo Points if wallet address is provided
+    const bonusPoints = hederaWallet !== 'N/A' ? 5 : 0;
+
+    db.run(
+        `INSERT INTO users (xUsername, hederaWallet, sloMoPoints) VALUES (?, ?, ?) ON CONFLICT(xUsername) DO UPDATE SET hederaWallet = ?, sloMoPoints = sloMoPoints + ?`,
+        [normalizedXUsername, hederaWallet, bonusPoints, hederaWallet, bonusPoints],
+        async (err) => {
+            if (err) return res.status(500).json({ error: 'Database error' });
+            await appendToGoogleSheet(normalizedXUsername, hederaWallet);
+            // Store the xUsername in the session
+            req.session.xUsername = normalizedXUsername;
+            console.log(`Session set for user: ${normalizedXUsername}`);
+            res.status(200).json({ message: 'Profile saved' });
+        }
+    );
 });
 
-// Endpoint to get the logged-in user's xUsername
 app.get('/api/whoami', (req, res) => {
-    console.log('Session data:', req.session); // Debug log
+    console.log('Session data:', req.session);
     if (req.session.xUsername) {
         res.json({ xUsername: req.session.xUsername });
     } else {
@@ -168,18 +121,15 @@ app.get('/api/leaderboard', (req, res) => {
     );
 });
 
-// Endpoint to check if today is a bonus day
 app.get('/api/bonus-day', (req, res) => {
     const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const isBonusDay = dayOfWeek === 0; // Sunday
-    const multiplier = isBonusDay ? 2 : 1; // 2x on Sundays, 1x otherwise
+    const dayOfWeek = today.getDay();
+    const isBonusDay = dayOfWeek === 0;
+    const multiplier = isBonusDay ? 2 : 1;
     res.json({ isBonusDay, multiplier });
 });
 
-// Endpoint to get season winners and claim status
 app.get('/api/season-winners', (req, res) => {
-    // Get the current season (latest season)
     db.get(
         `SELECT id FROM seasons ORDER BY id DESC LIMIT 1`,
         [],
@@ -189,7 +139,6 @@ app.get('/api/season-winners', (req, res) => {
 
             const currentSeasonId = currentSeason.id;
 
-            // Get the previous season (second-to-last season)
             db.get(
                 `SELECT id FROM seasons WHERE id < ? ORDER BY id DESC LIMIT 1`,
                 [currentSeasonId],
@@ -199,7 +148,6 @@ app.get('/api/season-winners', (req, res) => {
 
                     const previousSeasonId = previousSeason.id;
 
-                    // Fetch the winners with claim status
                     db.all(
                         `SELECT xUsername, rank, rewardAmount, claimed FROM season_rewards WHERE seasonId = ?`,
                         [previousSeasonId],
@@ -214,142 +162,6 @@ app.get('/api/season-winners', (req, res) => {
     );
 });
 
-// Endpoint to claim rewards
-app.post('/api/claim-rewards', async (req, res) => {
-    try {
-        console.log('Received claim-rewards request:', req.session);
-        const xUsername = req.session.xUsername;
-
-        if (!xUsername) {
-            console.log('No user session found');
-            return res.status(401).json({ error: 'Not logged in' });
-        }
-
-        console.log(`Processing claim for user: ${xUsername}`);
-
-        // Get the current season
-        db.get(
-            `SELECT id FROM seasons ORDER BY id DESC LIMIT 1`,
-            [],
-            async (err, currentSeason) => {
-                if (err) {
-                    console.error('Error fetching current season:', err);
-                    return res.status(500).json({ error: 'Database error' });
-                }
-                if (!currentSeason) {
-                    console.log('No seasons found');
-                    return res.status(404).json({ error: 'No seasons found' });
-                }
-
-                const currentSeasonId = currentSeason.id;
-                console.log(`Current season ID: ${currentSeasonId}`);
-
-                // Get the previous season
-                db.get(
-                    `SELECT id FROM seasons WHERE id < ? ORDER BY id DESC LIMIT 1`,
-                    [currentSeasonId],
-                    async (err, previousSeason) => {
-                        if (err) {
-                            console.error('Error fetching previous season:', err);
-                            return res.status(500).json({ error: 'Database error' });
-                        }
-                        if (!previousSeason) {
-                            console.log('No previous season found');
-                            return res.status(404).json({ error: 'No previous season found' });
-                        }
-
-                        const previousSeasonId = previousSeason.id;
-                        console.log(`Previous season ID: ${previousSeasonId}`);
-
-                        // Check if the user is eligible to claim rewards
-                        db.get(
-                            `SELECT rank, rewardAmount, claimed, hederaWallet
-                             FROM season_rewards sr
-                             JOIN users u ON sr.xUsername = u.xUsername
-                             WHERE sr.seasonId = ? AND sr.xUsername = ?`,
-                            [previousSeasonId, xUsername],
-                            async (err, reward) => {
-                                if (err) {
-                                    console.error('Error checking reward eligibility:', err);
-                                    return res.status(500).json({ error: 'Database error' });
-                                }
-                                if (!reward) {
-                                    console.log(`User ${xUsername} not eligible for season ${previousSeasonId}`);
-                                    return res.status(403).json({ error: 'You are not eligible to claim rewards for this season' });
-                                }
-                                if (reward.claimed) {
-                                    console.log(`User ${xUsername} already claimed for season ${previousSeasonId}`);
-                                    return res.status(403).json({ error: 'You have already claimed your rewards for this season' });
-                                }
-                                if (!reward.hederaWallet || reward.hederaWallet === 'N/A') {
-                                    console.log(`User ${xUsername} has no wallet address`);
-                                    return res.status(403).json({ error: 'No wallet address provided. Please update your profile with a valid Hedera wallet address.' });
-                                }
-
-                                // Perform the token transfer
-                                const rewardAmount = reward.rewardAmount;
-                                const recipientWallet = reward.hederaWallet;
-                                console.log(`Attempting to transfer ${rewardAmount} $SLOTH to ${recipientWallet}`);
-
-                                try {
-                                    // Associate the recipient wallet with the $SLOTH token if not already associated
-                                    console.log('Associating recipient wallet with $SLOTH token...');
-                                    const associateTx = new TokenAssociateTransaction()
-                                        .setAccountId(recipientWallet)
-                                        .setTokenIds([slothTokenId]);
-                                    const associateResponse = await associateTx.execute(client);
-                                    const associateReceipt = await associateResponse.getReceipt(client);
-                                    if (associateReceipt.status.toString() !== 'SUCCESS') {
-                                        throw new Error(`Token association failed: ${associateReceipt.status.toString()}`);
-                                    }
-                                    console.log(`Associated ${recipientWallet} with $SLOTH token`);
-
-                                    // Perform the token transfer
-                                    console.log('Executing token transfer...');
-                                    const transaction = new TokenTransferTransaction()
-                                        .addTokenTransfer(slothTokenId, treasuryAccountId, -rewardAmount) // Deduct from treasury
-                                        .addTokenTransfer(slothTokenId, recipientWallet, rewardAmount); // Add to recipient
-
-                                    const txResponse = await transaction.execute(client);
-                                    console.log(`Transaction submitted: ${txResponse.transactionId}`);
-                                    const receipt = await txResponse.getReceipt(client);
-                                    console.log(`Transaction receipt: ${JSON.stringify(receipt)}`);
-
-                                    if (receipt.status.toString() !== 'SUCCESS') {
-                                        throw new Error(`Token transfer failed: ${receipt.status.toString()}`);
-                                    }
-
-                                    // Update the claim status
-                                    console.log('Updating claim status in database...');
-                                    db.run(
-                                        `UPDATE season_rewards SET claimed = 1 WHERE seasonId = ? AND xUsername = ?`,
-                                        [previousSeasonId, xUsername],
-                                        (err) => {
-                                            if (err) {
-                                                console.error('Error updating claim status:', err);
-                                                return res.status(500).json({ error: 'Database error' });
-                                            }
-                                            console.log(`Reward claimed: ${rewardAmount} $SLOTH to ${recipientWallet} for ${xUsername}`);
-                                            res.json({ message: `Successfully claimed ${rewardAmount} $SLOTH!` });
-                                        }
-                                    );
-                                } catch (error) {
-                                    console.error('Detailed error transferring tokens:', error);
-                                    res.status(500).json({ error: `Failed to transfer tokens: ${error.message}` });
-                                }
-                            }
-                        );
-                    }
-                );
-            }
-        );
-    } catch (error) {
-        console.error('Error in /api/claim-rewards:', error);
-        res.status(500).json({ error: `Internal server error: ${error.message}` });
-    }
-});
-
-// Admin endpoint to verify the password
 app.post('/api/admin/verify-password', (req, res) => {
     const { adminPassword } = req.body;
 
@@ -360,7 +172,6 @@ app.post('/api/admin/verify-password', (req, res) => {
     res.status(200).json({ message: 'Password verified' });
 });
 
-// Admin endpoint to get all users
 app.get('/api/admin/users', (req, res) => {
     db.all(
         `SELECT xUsername, hederaWallet, sloMoPoints FROM users`,
@@ -372,12 +183,10 @@ app.get('/api/admin/users', (req, res) => {
     );
 });
 
-// Admin endpoint to get the current announcement
 app.get('/api/admin/announcement', (req, res) => {
-    // Check if today is a bonus day
     const today = new Date();
     const dayOfWeek = today.getDay();
-    const isBonusDay = dayOfWeek === 0; // Sunday
+    const isBonusDay = dayOfWeek === 0;
 
     db.get(
         `SELECT text FROM announcements WHERE id = 1`,
@@ -386,7 +195,6 @@ app.get('/api/admin/announcement', (req, res) => {
             if (err) return res.status(500).json({ error: 'Database error' });
             if (!row) return res.status(404).json({ error: 'Announcement not found' });
 
-            // Append bonus day message if today is Sunday
             let announcementText = row.text;
             if (isBonusDay) {
                 announcementText += ' 🦥 It’s Sloth Bonus Day! 2x SloMo Points today!';
@@ -397,16 +205,13 @@ app.get('/api/admin/announcement', (req, res) => {
     );
 });
 
-// Admin endpoint to update the announcement
 app.post('/api/admin/update-announcement', (req, res) => {
     const { adminPassword, text } = req.body;
 
-    // Simple password check
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
 
-    // Validate announcement text
     if (!text || text.trim().length === 0) {
         return res.status(400).json({ error: 'Announcement text cannot be empty' });
     }
@@ -425,21 +230,17 @@ app.post('/api/admin/update-announcement', (req, res) => {
     );
 });
 
-// Admin endpoint to delete a user
 app.post('/api/admin/delete-user', (req, res) => {
     const { xUsername, adminPassword } = req.body;
 
-    // Simple password check
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
 
-    // Validate X username (must not be empty)
     if (!xUsername) {
         return res.status(400).json({ error: 'X username is required' });
     }
 
-    // Check if the user exists
     db.get(
         `SELECT xUsername FROM users WHERE xUsername = ?`,
         [xUsername],
@@ -452,7 +253,6 @@ app.post('/api/admin/delete-user', (req, res) => {
                 return res.status(404).json({ error: `User ${xUsername} not found` });
             }
 
-            // Delete the user from the database
             db.run(
                 `DELETE FROM users WHERE xUsername = ?`,
                 [xUsername],
@@ -469,16 +269,13 @@ app.post('/api/admin/delete-user', (req, res) => {
     );
 });
 
-// Admin endpoint to clear invalid users from the leaderboard
 app.post('/api/admin/clear-leaderboard', (req, res) => {
     const { adminPassword } = req.body;
 
-    // Simple password check
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
 
-    // Log the current users before deletion
     db.all(`SELECT xUsername FROM users`, [], (err, rows) => {
         if (err) {
             console.error('Error fetching users before clearing:', err);
@@ -486,7 +283,6 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
         }
         console.log('Users before clearing:', rows);
 
-        // Delete users where xUsername is NULL (not linked)
         db.run(
             `DELETE FROM users WHERE xUsername IS NULL`,
             (err) => {
@@ -496,7 +292,6 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
                 }
                 console.log('Cleared invalid users from the leaderboard');
 
-                // Log the remaining users after deletion
                 db.all(`SELECT xUsername FROM users`, [], (err, remainingRows) => {
                     if (err) {
                         console.error('Error fetching users after clearing:', err);
@@ -510,16 +305,13 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
     });
 });
 
-// Admin endpoint to reset the leaderboard (reset points and start new season)
 app.post('/api/admin/reset-leaderboard', (req, res) => {
     const { adminPassword } = req.body;
 
-    // Simple password check
     if (adminPassword !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
     }
 
-    // Get the current season (latest season)
     db.get(
         `SELECT id FROM seasons ORDER BY id DESC LIMIT 1`,
         [],
@@ -535,7 +327,6 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
 
             const currentSeasonId = currentSeason.id;
 
-            // Get the top 3 players before resetting points
             db.all(
                 `SELECT xUsername, sloMoPoints FROM users ORDER BY sloMoPoints DESC LIMIT 3`,
                 [],
@@ -546,14 +337,12 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
                     }
                     console.log('Top players before season end:', topPlayers);
 
-                    // Define reward amounts
                     const rewards = [
-                        { rank: 1, amount: 100 }, // 1st place: 100 $SLOTH
-                        { rank: 2, amount: 50 },  // 2nd place: 50 $SLOTH
-                        { rank: 3, amount: 25 }   // 3rd place: 25 $SLOTH
+                        { rank: 1, amount: 100 },
+                        { rank: 2, amount: 50 },
+                        { rank: 3, amount: 25 }
                     ];
 
-                    // Insert the winners into season_rewards
                     const insertStmt = db.prepare(`
                         INSERT INTO season_rewards (seasonId, xUsername, rank, rewardAmount, claimed)
                         VALUES (?, ?, ?, ?, 0)
@@ -566,7 +355,6 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
                     });
                     insertStmt.finalize();
 
-                    // Reset all users' SloMo Points to 0
                     db.run(
                         `UPDATE users SET sloMoPoints = 0`,
                         (err) => {
@@ -576,8 +364,7 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
                             }
                             console.log('Reset all users\' SloMo Points to 0');
 
-                            // Insert a new season start timestamp
-                            const newSeasonStart = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+                            const newSeasonStart = Math.floor(Date.now() / 1000);
                             db.run(
                                 `INSERT INTO seasons (startTimestamp) VALUES (?)`,
                                 [newSeasonStart],
@@ -588,7 +375,6 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
                                     }
                                     console.log('Started new season with timestamp:', newSeasonStart);
 
-                                    // Clear the lastChecked object to reset tweet tracking
                                     Object.keys(lastChecked).forEach(key => delete lastChecked[key]);
                                     console.log('Cleared lastChecked timestamps for new season');
 
@@ -607,7 +393,6 @@ async function trackLazyLegendsPosts() {
     setInterval(async () => {
         console.log('Checking for #LazyLegends posts now...');
 
-        // Get the latest season start timestamp
         db.get(
             `SELECT startTimestamp FROM seasons ORDER BY id DESC LIMIT 1`,
             [],
@@ -620,13 +405,12 @@ async function trackLazyLegendsPosts() {
                     console.log('No season found, skipping tweet tracking.');
                     return;
                 }
-                const seasonStartTimestamp = row.startTimestamp * 1000; // Convert to milliseconds
+                const seasonStartTimestamp = row.startTimestamp * 1000;
 
-                // Check if today is a bonus day
                 const today = new Date();
                 const dayOfWeek = today.getDay();
-                const isBonusDay = dayOfWeek === 0; // Sunday
-                const multiplier = isBonusDay ? 2 : 1; // 2x on Sundays, 1x otherwise
+                const isBonusDay = dayOfWeek === 0;
+                const multiplier = isBonusDay ? 2 : 1;
                 console.log(`Today is ${isBonusDay ? '' : 'not '}a bonus day. Multiplier: ${multiplier}`);
 
                 db.all(`SELECT xUsername FROM users WHERE xUsername IS NOT NULL`, [], async (err, rows) => {
@@ -664,7 +448,7 @@ async function trackLazyLegendsPosts() {
                                 return tweetTime > lastTime && tweetTime >= seasonStartTimestamp;
                             });
 
-                            const pointsToAdd = (newTweets.length * 2) * multiplier; // Apply the multiplier
+                            const pointsToAdd = (newTweets.length * 2) * multiplier;
                             if (pointsToAdd > 0) {
                                 db.run(
                                     `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE xUsername = ?`,
