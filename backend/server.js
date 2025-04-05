@@ -5,18 +5,24 @@ const { google } = require('googleapis');
 const db = require('./database.js');
 const path = require('path');
 const session = require('express-session');
-const { Client, TokenTransferTransaction, AccountId, PrivateKey } = require('@hashgraph/sdk');
+const { Client, TokenTransferTransaction, AccountId, PrivateKey, TokenAssociateTransaction } = require('@hashgraph/sdk');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: true, // Allow all origins (adjust in production)
+    credentials: true // Allow cookies to be sent
+}));
 app.use(express.json());
 
 // Configure session middleware
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-session-secret', // Use an environment variable in production
+    secret: process.env.SESSION_SECRET || 'your-session-secret',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false } // Set to true in production with HTTPS
+    cookie: {
+        secure: false, // Set to true in production with HTTPS
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
 }));
 
 app.use(express.static(path.join(__dirname, '../frontend')));
@@ -88,6 +94,7 @@ app.post('/api/profile', (req, res) => {
             await appendToGoogleSheet(normalizedXUsername, hederaWallet);
             // Store the xUsername in the session
             req.session.xUsername = normalizedXUsername;
+            console.log(`Session set for user: ${normalizedXUsername}`);
             res.status(200).json({ message: 'Profile saved' });
         }
     );
@@ -95,6 +102,7 @@ app.post('/api/profile', (req, res) => {
 
 // Endpoint to get the logged-in user's xUsername
 app.get('/api/whoami', (req, res) => {
+    console.log('Session data:', req.session); // Debug log
     if (req.session.xUsername) {
         res.json({ xUsername: req.session.xUsername });
     } else {
@@ -195,16 +203,40 @@ app.post('/api/claim-rewards', async (req, res) => {
                          WHERE sr.seasonId = ? AND sr.xUsername = ?`,
                         [previousSeasonId, xUsername],
                         async (err, reward) => {
-                            if (err) return res.status(500).json({ error: 'Database error' });
-                            if (!reward) return res.status(403).json({ error: 'You are not eligible to claim rewards for this season' });
-                            if (reward.claimed) return res.status(403).json({ error: 'You have already claimed your rewards for this season' });
-                            if (!reward.hederaWallet || reward.hederaWallet === 'N/A') return res.status(403).json({ error: 'No wallet address provided. Please update your profile with a valid Hedera wallet address.' });
+                            if (err) {
+                                console.error('Error checking reward eligibility:', err);
+                                return res.status(500).json({ error: 'Database error' });
+                            }
+                            if (!reward) {
+                                console.log(`User ${xUsername} not eligible for season ${previousSeasonId}`);
+                                return res.status(403).json({ error: 'You are not eligible to claim rewards for this season' });
+                            }
+                            if (reward.claimed) {
+                                console.log(`User ${xUsername} already claimed for season ${previousSeasonId}`);
+                                return res.status(403).json({ error: 'You have already claimed your rewards for this season' });
+                            }
+                            if (!reward.hederaWallet || reward.hederaWallet === 'N/A') {
+                                console.log(`User ${xUsername} has no wallet address`);
+                                return res.status(403).json({ error: 'No wallet address provided. Please update your profile with a valid Hedera wallet address.' });
+                            }
 
                             // Perform the token transfer
                             const rewardAmount = reward.rewardAmount;
                             const recipientWallet = reward.hederaWallet;
 
                             try {
+                                // Associate the recipient wallet with the $SLOTH token if not already associated
+                                const associateTx = new TokenAssociateTransaction()
+                                    .setAccountId(recipientWallet)
+                                    .setTokenIds([slothTokenId]);
+                                const associateResponse = await associateTx.execute(client);
+                                const associateReceipt = await associateResponse.getReceipt(client);
+                                if (associateReceipt.status.toString() !== 'SUCCESS') {
+                                    throw new Error('Token association failed');
+                                }
+                                console.log(`Associated ${recipientWallet} with $SLOTH token`);
+
+                                // Perform the token transfer
                                 const transaction = new TokenTransferTransaction()
                                     .addTokenTransfer(slothTokenId, treasuryAccountId, -rewardAmount) // Deduct from treasury
                                     .addTokenTransfer(slothTokenId, recipientWallet, rewardAmount); // Add to recipient
@@ -230,8 +262,8 @@ app.post('/api/claim-rewards', async (req, res) => {
                                     }
                                 );
                             } catch (error) {
-                                console.error('Error transferring tokens:', error);
-                                res.status(500).json({ error: 'Failed to transfer tokens. Please try again later.' });
+                                console.error('Error transferring tokens:', error.message);
+                                res.status(500).json({ error: `Failed to transfer tokens: ${error.message}` });
                             }
                         }
                     );
