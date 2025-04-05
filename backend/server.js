@@ -5,7 +5,6 @@ const { google } = require('googleapis');
 const db = require('./database.js');
 const path = require('path');
 const session = require('express-session');
-const SQLiteStore = require('connect-sqlite3')(session);
 const { Client, TokenTransferTransaction, AccountId, PrivateKey, TokenAssociateTransaction } = require('@hashgraph/sdk');
 
 const app = express();
@@ -17,13 +16,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Configure session middleware with SQLite store
+// Configure session middleware with in-memory store (temporary)
 app.use(session({
-    store: new SQLiteStore({
-        db: 'sessions.db',
-        dir: '/app/data',
-        concurrentDB: true // Allow concurrent database access
-    }),
     secret: process.env.SESSION_SECRET || 'your-session-secret',
     resave: false,
     saveUninitialized: false,
