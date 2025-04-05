@@ -6,6 +6,9 @@ const db = require('./database.js');
 const path = require('path');
 const session = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
+const bcrypt = require('bcrypt');
+const multer = require('multer');
+const fs = require('fs');
 
 const app = express();
 app.use(cors({
@@ -38,6 +41,40 @@ app.use((err, req, res, next) => {
 
 app.use(express.static(path.join(__dirname, '../frontend')));
 
+// Serve uploaded photos
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Configure multer for file uploads
+const uploadDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `${req.session.xUsername}-${uniqueSuffix}${path.extname(file.originalname)}`);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpeg|jpg|png|gif/;
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = filetypes.test(file.mimetype);
+        if (extname && mimetype) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only images (jpeg, jpg, png, gif) are allowed!'));
+        }
+    },
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
 // Google Sheets authentication
 const auth = new google.auth.GoogleAuth({
     keyFile: './lazy-legends-credentials.json',
@@ -54,15 +91,49 @@ const lastChecked = {};
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'your-secret-password';
 console.log('ADMIN_PASSWORD loaded:', ADMIN_PASSWORD);
 
+// Migrate existing users to add default password
+db.serialize(() => {
+    // First, ensure the new columns exist
+    db.run(`
+        ALTER TABLE users ADD COLUMN password TEXT
+    `, (err) => {
+        if (err && !err.message.includes('duplicate column name')) {
+            console.error('Error adding password column:', err);
+        }
+    });
+
+    db.run(`
+        ALTER TABLE users ADD COLUMN profilePhoto TEXT
+    `, (err) => {
+        if (err && !err.message.includes('duplicate column name')) {
+            console.error('Error adding profilePhoto column:', err);
+        }
+    });
+
+    // Update existing users with a default password
+    bcrypt.hash('defaultpassword123', 10, (err, hash) => {
+        if (err) {
+            console.error('Error hashing default password:', err);
+            return;
+        }
+        db.run(`
+            UPDATE users SET password = ? WHERE password IS NULL
+        `, [hash], (err) => {
+            if (err) {
+                console.error('Error updating existing users with default password:', err);
+            } else {
+                console.log('Migrated existing users with default password');
+            }
+        });
+    });
+});
+
 async function appendToGoogleSheet(xUsername, hederaWallet) {
-    const timestamp = new Date().toISOString();
-    const maskedWallet = hederaWallet !== 'N/A' ? hederaWallet.slice(0, 6) + '***' : 'N/A';
-    console.log(`Logging to Google Sheet - xUsername: ${xUsername}, maskedWallet: ${maskedWallet}, timestamp: ${timestamp}`);
-    const values = [[xUsername, maskedWallet, timestamp]];
+    const values = [[xUsername, hederaWallet]];
     try {
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!A:C',
+            range: 'Sheet1!A:B',
             valueInputOption: 'RAW',
             resource: { values },
         });
@@ -72,8 +143,9 @@ async function appendToGoogleSheet(xUsername, hederaWallet) {
     }
 }
 
-app.post('/api/profile', (req, res) => {
-    const { xUsername, hederaWallet } = req.body;
+// Sign-up endpoint
+app.post('/api/signup', async (req, res) => {
+    const { xUsername, password, hederaWallet } = req.body;
 
     // Validate X username
     const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
@@ -81,24 +153,176 @@ app.post('/api/profile', (req, res) => {
         return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
     }
 
+    // Validate password
+    if (!password || password.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+    }
+
+    // Validate Hedera wallet address if provided
+    let walletAddress = hederaWallet || 'N/A';
+    if (hederaWallet) {
+        const walletRegex = /^0\.0\.\d+$/;
+        if (!walletRegex.test(hederaWallet)) {
+            return res.status(400).json({ error: 'Invalid Hedera wallet address. It must start with 0.0. followed by numbers (e.g., 0.0.12345).' });
+        }
+        walletAddress = hederaWallet;
+    }
+
     // Normalize xUsername to lowercase for consistency
     const normalizedXUsername = xUsername.toLowerCase();
 
-    // Add 5 bonus SloMo Points if wallet address is provided
-    const bonusPoints = hederaWallet !== 'N/A' ? 5 : 0;
+    // Check if username already exists
+    db.get(`SELECT xUsername FROM users WHERE xUsername = ?`, [normalizedXUsername], async (err, row) => {
+        if (err) {
+            console.error('Error checking username:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (row) {
+            return res.status(400).json({ error: 'Username already taken.' });
+        }
 
-    db.run(
-        `INSERT INTO users (xUsername, hederaWallet, sloMoPoints) VALUES (?, ?, ?) ON CONFLICT(xUsername) DO UPDATE SET hederaWallet = ?, sloMoPoints = sloMoPoints + ?`,
-        [normalizedXUsername, hederaWallet, bonusPoints, hederaWallet, bonusPoints],
-        async (err) => {
-            if (err) return res.status(500).json({ error: 'Database error' });
-            await appendToGoogleSheet(normalizedXUsername, hederaWallet);
-            // Store the xUsername in the session
-            req.session.xUsername = normalizedXUsername;
-            console.log(`Session set for user: ${normalizedXUsername}`);
-            res.status(200).json({ message: 'Profile saved' });
+        // Hash the password
+        try {
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            // Add 5 bonus SloMo Points if wallet address is provided
+            const bonusPoints = walletAddress !== 'N/A' ? 5 : 0;
+
+            // Insert the new user
+            db.run(
+                `INSERT INTO users (xUsername, password, hederaWallet, sloMoPoints) VALUES (?, ?, ?, ?)`,
+                [normalizedXUsername, hashedPassword, walletAddress, bonusPoints],
+                async (err) => {
+                    if (err) {
+                        console.error('Error inserting user:', err);
+                        return res.status(500).json({ error: 'Database error' });
+                    }
+                    await appendToGoogleSheet(normalizedXUsername, walletAddress);
+                    req.session.xUsername = normalizedXUsername;
+                    console.log(`Session set for user: ${normalizedXUsername}`);
+                    res.status(200).json({ message: 'Sign-up successful' });
+                }
+            );
+        } catch (error) {
+            console.error('Error hashing password:', error);
+            res.status(500).json({ error: 'Error hashing password' });
+        }
+    });
+});
+
+// Sign-in endpoint
+app.post('/api/signin', (req, res) => {
+    const { xUsername, password } = req.body;
+
+    // Validate X username
+    const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
+    if (!xUsername || !xUsernameRegex.test(xUsername)) {
+        return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
+    }
+
+    // Validate password
+    if (!password) {
+        return res.status(400).json({ error: 'Password is required.' });
+    }
+
+    // Normalize xUsername to lowercase for consistency
+    const normalizedXUsername = xUsername.toLowerCase();
+
+    // Check if user exists
+    db.get(`SELECT * FROM users WHERE xUsername = ?`, [normalizedXUsername], async (err, user) => {
+        if (err) {
+            console.error('Error fetching user:', err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid username or password.' });
+        }
+
+        // Compare passwords
+        try {
+            const match = await bcrypt.compare(password, user.password);
+            if (match) {
+                req.session.xUsername = normalizedXUsername;
+                console.log(`Session set for user: ${normalizedXUsername}`);
+                res.status(200).json({ message: 'Sign-in successful' });
+            } else {
+                res.status(401).json({ error: 'Invalid username or password.' });
+            }
+        } catch (error) {
+            console.error('Error comparing passwords:', error);
+            res.status(500).json({ error: 'Error verifying password' });
+        }
+    });
+});
+
+// Sign-out endpoint
+app.post('/api/signout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Error destroying session:', err);
+            return res.status(500).json({ error: 'Error signing out' });
+        }
+        res.status(200).json({ message: 'Signed out successfully' });
+    });
+});
+
+// Get user profile data
+app.get('/api/profile/:username', (req, res) => {
+    const { username } = req.params;
+    const normalizedUsername = username.toLowerCase();
+
+    if (!req.session.xUsername) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
+    if (req.session.xUsername !== normalizedUsername) {
+        return res.status(403).json({ error: 'Unauthorized to view this profile' });
+    }
+
+    db.get(
+        `SELECT xUsername, hederaWallet, sloMoPoints, profilePhoto FROM users WHERE xUsername = ?`,
+        [normalizedUsername],
+        (err, user) => {
+            if (err) {
+                console.error('Error fetching user profile:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.json(user);
         }
     );
+});
+
+// Profile photo upload endpoint
+app.post('/api/upload-photo', upload.single('photo'), (req, res) => {
+    if (!req.session.xUsername) {
+        return res.status(401).json({ error: 'Not logged in' });
+    }
+
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const photoUrl = `/uploads/${req.file.filename}`;
+
+    db.run(
+        `UPDATE users SET profilePhoto = ? WHERE xUsername = ?`,
+        [photoUrl, req.session.xUsername],
+        (err) => {
+            if (err) {
+                console.error('Error updating profile photo:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            res.json({ photoUrl });
+        }
+    );
+});
+
+// Profile page route
+app.get('/profile/:username', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 app.get('/api/whoami', (req, res) => {
