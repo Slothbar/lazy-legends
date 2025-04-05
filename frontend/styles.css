@@ -1,40 +1,40 @@
+/* General Styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
+    background-color: #000;
+    color: #fff;
 }
 
-header {
-    background-color: #333;
-    color: white;
-    text-align: center;
-    padding: 1em 0;
-    position: relative;
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
-header h1 {
-    margin: 0;
-}
-
+/* Hamburger Menu */
 .hamburger-menu {
     position: absolute;
-    top: 1em;
-    left: 1em;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
 }
 
 .hamburger-icon {
     cursor: pointer;
-    font-size: 1.5em;
+    font-size: 24px;
+    color: #fff;
 }
 
 .menu-content {
     display: none;
     position: absolute;
-    background-color: #444;
+    background-color: #333;
     min-width: 160px;
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
+    border-radius: 5px;
 }
 
 .menu-content a {
@@ -42,6 +42,7 @@ header h1 {
     padding: 12px 16px;
     text-decoration: none;
     display: block;
+    font-size: 16px;
 }
 
 .menu-content a:hover {
@@ -52,168 +53,163 @@ header h1 {
     display: block;
 }
 
-main {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+/* Header */
+header {
+    text-align: center;
+    padding: 40px 0;
 }
 
-section {
-    margin-bottom: 40px;
+header img {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 20px;
 }
 
-#announcement-bar {
+header h1 {
+    font-size: 48px;
+    font-weight: 700;
+    margin: 0;
+    color: #fff;
+}
+
+header p {
+    font-size: 18px;
+    color: #ccc;
+    margin: 10px 0 0;
+}
+
+/* Announcement Bar */
+.announcement-bar {
     background-color: #4a7c59;
-    color: white;
     padding: 10px;
     text-align: center;
     border-radius: 5px;
+    margin-bottom: 20px;
 }
 
+.announcement-text {
+    color: white;
+    font-size: 16px;
+    margin: 0;
+}
+
+/* Section Headings */
 h2 {
-    color: #333;
+    font-size: 28px;
+    font-weight: 600;
+    color: #fff;
     border-bottom: 2px solid #4a7c59;
     padding-bottom: 5px;
+    margin-bottom: 20px;
+}
+
+h3 {
+    font-size: 20px;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+/* How to Play Section */
+#how-to-play-section {
+    margin-bottom: 40px;
+}
+
+#how-to-play-section p {
+    font-size: 16px;
+    color: #ccc;
+    margin-bottom: 20px;
+}
+
+#how-to-play-section ol {
+    padding-left: 20px;
+}
+
+#how-to-play-section li {
+    font-size: 16px;
+    color: #fff;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+#how-to-play-section li strong {
+    color: #4a7c59;
+}
+
+#how-to-play-section img {
+    display: block;
+    margin: 10px auto;
+    max-width: 200px;
+    height: auto;
+}
+
+#how-to-play-section center p {
+    font-size: 16px;
+    color: #ccc;
+}
+
+/* Leaderboard and Season Rewards Sections */
+#leaderboard-section,
+#season-rewards-section {
+    margin-bottom: 40px;
+}
+
+#season-winners p {
+    font-size: 16px;
+    color: #fff;
+    margin: 5px 0;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    background-color: #222;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     margin-top: 20px;
-    background-color: white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 th, td {
     padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #444;
 }
 
 th {
     background-color: #4a7c59;
     color: white;
+    font-weight: 600;
+}
+
+td {
+    color: #fff;
 }
 
 tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: #2a2a2a;
 }
 
 tr:hover {
-    background-color: #f1f1f1;
+    background-color: #333;
 }
 
-form {
-    background-color: white;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #333;
-}
-
-input[type="text"],
-input[type="password"],
-input[type="file"],
-textarea {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-button {
-    background-color: #4a7c59;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-button:hover {
-    background-color: #3a6347;
-}
-
-#auth-toggle {
+/* Footer */
+footer {
     text-align: center;
-    margin-bottom: 20px;
-}
-
-#auth-toggle button {
-    margin: 0 10px;
-    background-color: #666;
-}
-
-#auth-toggle button:hover {
-    background-color: #555;
-}
-
-#signup-feedback,
-#signin-feedback,
-#upload-feedback {
-    margin-top: 10px;
-    text-align: center;
-}
-
-#next-steps-section {
-    text-align: center;
-}
-
-#next-steps-section a {
-    display: inline-block;
-    margin-top: 10px;
-    color: #4a7c59;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-#next-steps-section a:hover {
-    text-decoration: underline;
-}
-
-#profile-section {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-#profile-photo-container {
-    margin-top: 20px;
-}
-
-#profile-photo {
-    display: block;
-    margin: 10px 0;
-}
-
-#signout-btn {
-    background-color: #d9534f;
-    margin-top: 20px;
-}
-
-#signout-btn:hover {
-    background-color: #c9302c;
+    padding: 20px 0;
+    background-color: #111;
+    color: #ccc;
+    font-size: 14px;
 }
 
 /* Beautified styles for sign-up and sign-in forms */
 #auth-section {
-    background-color: #fff;
+    background-color: #222;
     padding: 30px;
     border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     max-width: 500px;
-    margin: 0 auto;
-    border: 1px solid #ddd;
+    margin: 0 auto 40px;
+    border: 1px solid #444;
 }
 
 #auth-toggle {
@@ -261,6 +257,7 @@ button:hover {
 #signup-form label,
 #signin-form label {
     font-size: 1em;
+    color: #fff;
 }
 
 #signup-form input[type="text"],
@@ -271,6 +268,8 @@ button:hover {
     border: 1px solid #ccc;
     border-radius: 5px;
     transition: border-color 0.3s;
+    background-color: #333;
+    color: #fff;
 }
 
 #signup-form input[type="text"]:focus,
@@ -301,13 +300,116 @@ button:hover {
     transform: scale(0.98);
 }
 
+#signup-feedback,
+#signin-feedback,
+#upload-feedback {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+/* Next Steps Section */
+#next-steps-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+#next-steps-section h2 {
+    color: #fff;
+    border-bottom: 2px solid #4a7c59;
+}
+
+#next-steps-section p {
+    color: #ccc;
+    font-size: 16px;
+}
+
+#next-steps-section button {
+    margin-top: 10px;
+}
+
+/* Profile Section */
+#profile-section {
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: #222;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    margin-bottom: 40px;
+}
+
+#profile-section h2 {
+    color: #fff;
+    border-bottom: 2px solid #4a7c59;
+}
+
+#profile-section p {
+    color: #fff;
+    font-size: 16px;
+}
+
+#profile-photo-container {
+    margin-top: 20px;
+}
+
+#profile-photo {
+    display: block;
+    margin: 10px 0;
+}
+
+#profile-section input[type="file"] {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #ccc;
+}
+
+#signout-btn,
 #delete-account-btn {
     background-color: #d9534f;
     margin-top: 10px;
 }
 
+#signout-btn:hover,
 #delete-account-btn:hover {
     background-color: #c9302c;
+}
+
+#back-to-home-from-profile-btn {
+    margin-top: 10px;
+}
+
+/* Admin Panel Section */
+#admin-panel {
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: #222;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    margin-bottom: 40px;
+}
+
+#admin-panel h2,
+#admin-panel h3 {
+    color: #fff;
+    border-bottom: 2px solid #4a7c59;
+}
+
+#admin-panel p {
+    color: #ccc;
+    font-size: 16px;
+}
+
+#admin-panel input[type="password"],
+#admin-panel textarea {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #ccc;
+}
+
+#admin-panel button {
+    margin: 5px 0;
 }
 
 /* Add thumbnail styling for leaderboard */
