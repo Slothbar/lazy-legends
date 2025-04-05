@@ -87,7 +87,7 @@ header p {
 
 /* Announcement Bar */
 .announcement-bar {
-    background: #fff; /* White background */
+    background: #DAA520; /* Gold background */
     padding: 10px;
     text-align: center;
     border-radius: 5px;
@@ -96,7 +96,7 @@ header p {
 }
 
 .announcement-text {
-    color: #333; /* Dark text to match the theme */
+    color: #fff; /* White text to match the gold background */
     font-size: 16px;
     margin: 0;
 }
