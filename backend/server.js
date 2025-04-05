@@ -16,7 +16,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Configure session middleware with in-memory store (temporary)
+// Configure session middleware with in-memory store
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-session-secret',
     resave: false,
@@ -67,7 +67,7 @@ if (!slothTokenId || slothTokenId.includes('<your-sloth-token-id>')) {
     throw new Error('SLOTH_TOKEN_ID environment variable is not set or invalid');
 }
 
-const client = Client.forTestnet(); // Use .forMainnet() for production
+const client = Client.forMainnet(); // Switch to Mainnet
 client.setOperator(AccountId.fromString(treasuryAccountId), PrivateKey.fromString(treasuryPrivateKey));
 
 const lastChecked = {};
@@ -78,7 +78,6 @@ console.log('ADMIN_PASSWORD loaded:', ADMIN_PASSWORD);
 
 async function appendToGoogleSheet(xUsername, hederaWallet) {
     const timestamp = new Date().toISOString();
-    // Mask the wallet address for privacy (show only first 6 characters)
     const maskedWallet = hederaWallet !== 'N/A' ? hederaWallet.slice(0, 6) + '***' : 'N/A';
     console.log(`Logging to Google Sheet - xUsername: ${xUsername}, maskedWallet: ${maskedWallet}, timestamp: ${timestamp}`);
     const values = [[xUsername, maskedWallet, timestamp]];
@@ -202,11 +201,15 @@ app.get('/api/season-winners', (req, res) => {
 // Endpoint to claim rewards
 app.post('/api/claim-rewards', async (req, res) => {
     try {
+        console.log('Received claim-rewards request:', req.session);
         const xUsername = req.session.xUsername;
 
         if (!xUsername) {
+            console.log('No user session found');
             return res.status(401).json({ error: 'Not logged in' });
         }
+
+        console.log(`Processing claim for user: ${xUsername}`);
 
         // Get the current season
         db.get(
@@ -217,9 +220,13 @@ app.post('/api/claim-rewards', async (req, res) => {
                     console.error('Error fetching current season:', err);
                     return res.status(500).json({ error: 'Database error' });
                 }
-                if (!currentSeason) return res.status(404).json({ error: 'No seasons found' });
+                if (!currentSeason) {
+                    console.log('No seasons found');
+                    return res.status(404).json({ error: 'No seasons found' });
+                }
 
                 const currentSeasonId = currentSeason.id;
+                console.log(`Current season ID: ${currentSeasonId}`);
 
                 // Get the previous season
                 db.get(
@@ -230,9 +237,13 @@ app.post('/api/claim-rewards', async (req, res) => {
                             console.error('Error fetching previous season:', err);
                             return res.status(500).json({ error: 'Database error' });
                         }
-                        if (!previousSeason) return res.status(404).json({ error: 'No previous season found' });
+                        if (!previousSeason) {
+                            console.log('No previous season found');
+                            return res.status(404).json({ error: 'No previous season found' });
+                        }
 
                         const previousSeasonId = previousSeason.id;
+                        console.log(`Previous season ID: ${previousSeasonId}`);
 
                         // Check if the user is eligible to claim rewards
                         db.get(
@@ -262,32 +273,38 @@ app.post('/api/claim-rewards', async (req, res) => {
                                 // Perform the token transfer
                                 const rewardAmount = reward.rewardAmount;
                                 const recipientWallet = reward.hederaWallet;
+                                console.log(`Attempting to transfer ${rewardAmount} $SLOTH to ${recipientWallet}`);
 
                                 try {
                                     // Associate the recipient wallet with the $SLOTH token if not already associated
+                                    console.log('Associating recipient wallet with $SLOTH token...');
                                     const associateTx = new TokenAssociateTransaction()
                                         .setAccountId(recipientWallet)
                                         .setTokenIds([slothTokenId]);
                                     const associateResponse = await associateTx.execute(client);
                                     const associateReceipt = await associateResponse.getReceipt(client);
                                     if (associateReceipt.status.toString() !== 'SUCCESS') {
-                                        throw new Error('Token association failed: ' + associateReceipt.status.toString());
+                                        throw new Error(`Token association failed: ${associateReceipt.status.toString()}`);
                                     }
                                     console.log(`Associated ${recipientWallet} with $SLOTH token`);
 
                                     // Perform the token transfer
+                                    console.log('Executing token transfer...');
                                     const transaction = new TokenTransferTransaction()
                                         .addTokenTransfer(slothTokenId, treasuryAccountId, -rewardAmount) // Deduct from treasury
                                         .addTokenTransfer(slothTokenId, recipientWallet, rewardAmount); // Add to recipient
 
                                     const txResponse = await transaction.execute(client);
+                                    console.log(`Transaction submitted: ${txResponse.transactionId}`);
                                     const receipt = await txResponse.getReceipt(client);
+                                    console.log(`Transaction receipt: ${JSON.stringify(receipt)}`);
 
                                     if (receipt.status.toString() !== 'SUCCESS') {
-                                        throw new Error('Token transfer failed: ' + receipt.status.toString());
+                                        throw new Error(`Token transfer failed: ${receipt.status.toString()}`);
                                     }
 
                                     // Update the claim status
+                                    console.log('Updating claim status in database...');
                                     db.run(
                                         `UPDATE season_rewards SET claimed = 1 WHERE seasonId = ? AND xUsername = ?`,
                                         [previousSeasonId, xUsername],
@@ -301,7 +318,7 @@ app.post('/api/claim-rewards', async (req, res) => {
                                         }
                                     );
                                 } catch (error) {
-                                    console.error('Error transferring tokens:', error.message);
+                                    console.error('Detailed error transferring tokens:', error);
                                     res.status(500).json({ error: `Failed to transfer tokens: ${error.message}` });
                                 }
                             }
@@ -311,8 +328,8 @@ app.post('/api/claim-rewards', async (req, res) => {
             }
         );
     } catch (error) {
-        console.error('Error in /api/claim-rewards:', error.message);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error in /api/claim-rewards:', error);
+        res.status(500).json({ error: `Internal server error: ${error.message}` });
     }
 });
 
