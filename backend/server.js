@@ -20,8 +20,9 @@ app.use(express.json());
 // Configure session middleware with SQLite store
 app.use(session({
     store: new SQLiteStore({
-        db: 'sessions.db', // Store sessions in a separate SQLite database
-        dir: '/app/data' // Same directory as your main database
+        db: 'sessions.db',
+        dir: '/app/data',
+        concurrentDB: true // Allow concurrent database access
     }),
     secret: process.env.SESSION_SECRET || 'your-session-secret',
     resave: false,
@@ -32,6 +33,16 @@ app.use(session({
         sameSite: 'lax' // Adjust based on your needs
     }
 }));
+
+// Middleware to handle session errors
+app.use((err, req, res, next) => {
+    if (err) {
+        console.error('Session middleware error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    } else {
+        next();
+    }
+});
 
 app.use(express.static(path.join(__dirname, '../frontend')));
 
@@ -90,33 +101,41 @@ async function appendToGoogleSheet(xUsername, hederaWallet) {
     }
 }
 
-app.post('/api/profile', (req, res) => {
-    const { xUsername, hederaWallet } = req.body;
+app.post('/api/profile', async (req, res) => {
+    try {
+        const { xUsername, hederaWallet } = req.body;
 
-    // Validate X username
-    const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
-    if (!xUsername || !xUsernameRegex.test(xUsername)) {
-        return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
-    }
-
-    // Normalize xUsername to lowercase for consistency
-    const normalizedXUsername = xUsername.toLowerCase();
-
-    // Add 5 bonus SloMo Points if wallet address is provided
-    const bonusPoints = hederaWallet !== 'N/A' ? 5 : 0;
-
-    db.run(
-        `INSERT INTO users (xUsername, hederaWallet, sloMoPoints) VALUES (?, ?, ?) ON CONFLICT(xUsername) DO UPDATE SET hederaWallet = ?, sloMoPoints = sloMoPoints + ?`,
-        [normalizedXUsername, hederaWallet, bonusPoints, hederaWallet, bonusPoints],
-        async (err) => {
-            if (err) return res.status(500).json({ error: 'Database error' });
-            await appendToGoogleSheet(normalizedXUsername, hederaWallet);
-            // Store the xUsername in the session
-            req.session.xUsername = normalizedXUsername;
-            console.log(`Session set for user: ${normalizedXUsername}`);
-            res.status(200).json({ message: 'Profile saved' });
+        // Validate X username
+        const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
+        if (!xUsername || !xUsernameRegex.test(xUsername)) {
+            return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
         }
-    );
+
+        // Normalize xUsername to lowercase for consistency
+        const normalizedXUsername = xUsername.toLowerCase();
+
+        // Add 5 bonus SloMo Points if wallet address is provided
+        const bonusPoints = hederaWallet !== 'N/A' ? 5 : 0;
+
+        db.run(
+            `INSERT INTO users (xUsername, hederaWallet, sloMoPoints) VALUES (?, ?, ?) ON CONFLICT(xUsername) DO UPDATE SET hederaWallet = ?, sloMoPoints = sloMoPoints + ?`,
+            [normalizedXUsername, hederaWallet, bonusPoints, hederaWallet, bonusPoints],
+            async (err) => {
+                if (err) {
+                    console.error('Error saving profile to database:', err);
+                    return res.status(500).json({ error: 'Database error' });
+                }
+                await appendToGoogleSheet(normalizedXUsername, hederaWallet);
+                // Store the xUsername in the session
+                req.session.xUsername = normalizedXUsername;
+                console.log(`Session set for user: ${normalizedXUsername}`);
+                res.status(200).json({ message: 'Profile saved' });
+            }
+        );
+    } catch (error) {
+        console.error('Error in /api/profile:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Endpoint to get the logged-in user's xUsername
