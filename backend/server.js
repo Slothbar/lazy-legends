@@ -5,6 +5,7 @@ const { google } = require('googleapis');
 const db = require('./database.js');
 const path = require('path');
 const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
 const { Client, TokenTransferTransaction, AccountId, PrivateKey, TokenAssociateTransaction } = require('@hashgraph/sdk');
 
 const app = express();
@@ -16,8 +17,13 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Configure session middleware with in-memory store
+// Configure session middleware with SQLite store
 app.use(session({
+    store: new SQLiteStore({
+        db: 'sessions.db',
+        dir: '/app/data', // Ensure this directory exists on Render
+        concurrentDB: true // Allow concurrent database access
+    }),
     secret: process.env.SESSION_SECRET || 'your-session-secret',
     resave: false,
     saveUninitialized: false,
@@ -67,7 +73,7 @@ if (!slothTokenId || slothTokenId.includes('<your-sloth-token-id>')) {
     throw new Error('SLOTH_TOKEN_ID environment variable is not set or invalid');
 }
 
-const client = Client.forMainnet(); // Switch to Mainnet
+const client = Client.forMainnet(); // Using Mainnet
 client.setOperator(AccountId.fromString(treasuryAccountId), PrivateKey.fromString(treasuryPrivateKey));
 
 const lastChecked = {};
