@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminPanel.style.display = 'none';
             adminLogin.style.display = 'block';
             adminControls.style.display = 'none';
-            adminUsers.style.display = "none";
+            adminUsers.style.display = 'none';
             adminAnnouncement.style.display = 'none';
             adminPasswordInput.value = '';
             window.history.pushState({}, '', '/');
