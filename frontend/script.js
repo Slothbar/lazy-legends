@@ -445,8 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     seasonWinnersDiv.innerHTML = '<p>No previous seasons yet. Keep posting to win!</p>';
                 } else {
                     data.winners.forEach(winner => {
-                        const status = winner.claimed ? ' (Claimed)' : ' (Not Claimed)';
-                        const winnerText = `Rank ${winner.rank}: ${winner.xUsername} - ${winner.rewardAmount} $SLOTH${status}`;
+                        const winnerText = `Rank ${winner.rank}: ${winner.xUsername} - ${winner.rewardAmount} $SLOTH`; // Removed status
                         const p = document.createElement('p');
                         p.textContent = winnerText;
                         seasonWinnersDiv.appendChild(p);
