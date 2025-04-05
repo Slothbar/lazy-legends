@@ -36,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveAnnouncementBtn = document.getElementById('save-announcement-btn');
     const backToControlsBtn = document.getElementById('back-to-controls-btn');
     const backToControlsFromAnnouncementBtn = document.getElementById('back-to-controls-from-announcement-btn');
-    const claimRewardsBtn = document.getElementById('claim-rewards-btn');
 
     if (adminLink) {
         adminLink.addEventListener('click', (e) => {
@@ -257,30 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (claimRewardsBtn) {
-        claimRewardsBtn.addEventListener('click', async () => {
-            try {
-                const response = await fetch('/api/claim-rewards', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include' // Include cookies
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    alert(data.message);
-                    fetchSeasonWinners(); // Refresh the winners list to update claim status
-                } else {
-                    const errorData = await response.json();
-                    alert(`Error: ${errorData.error || 'Unknown error'}`);
-                }
-            } catch (error) {
-                console.error('Error claiming rewards:', error);
-                alert('Error claiming rewards. Check the console for details.');
-            }
-        });
-    }
-
     // Handle profile form submission (Step 1: X Username)
     const profileFormStep1 = document.getElementById('profile-form-step1');
     const profileFormStep2 = document.getElementById('profile-form-step2');
@@ -461,8 +436,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 credentials: 'include' // Include cookies
             });
             const seasonWinnersDiv = document.getElementById('season-winners');
-            const claimRewardsDiv = document.getElementById('claim-rewards');
-            const rewardDetailsP = document.getElementById('reward-details');
 
             if (response.ok) {
                 const data = await response.json();
@@ -478,20 +451,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         p.textContent = winnerText;
                         seasonWinnersDiv.appendChild(p);
                     });
-
-                    // Check if the logged-in user is eligible to claim rewards
-                    if (xUsername) {
-                        const userWinner = data.winners.find(winner => winner.xUsername === xUsername);
-                        if (userWinner && !userWinner.claimed) {
-                            claimRewardsDiv.style.display = 'block';
-                            rewardDetailsP.textContent = `Rank ${userWinner.rank}: You won ${userWinner.rewardAmount} $SLOTH!`;
-                        } else {
-                            claimRewardsDiv.style.display = 'none';
-                        }
-                    } else {
-                        claimRewardsDiv.style.display = 'none';
-                        seasonWinnersDiv.innerHTML += '<p>Please link your X profile to claim rewards.</p>';
-                    }
                 }
             } else {
                 const errorData = await response.json();
@@ -500,14 +459,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     console.error('Error fetching season winners:', errorData);
                 }
-                claimRewardsDiv.style.display = 'none';
             }
         } catch (error) {
             console.error('Error fetching season winners:', error);
             const seasonWinnersDiv = document.getElementById('season-winners');
-            const claimRewardsDiv = document.getElementById('claim-rewards');
             seasonWinnersDiv.innerHTML = '<p>No previous seasons yet. Keep posting to win!</p>';
-            claimRewardsDiv.style.display = 'none';
         }
     }
 });
