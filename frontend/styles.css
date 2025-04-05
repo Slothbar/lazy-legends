@@ -1,5 +1,5 @@
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f4f4f4;
@@ -15,8 +15,6 @@ header {
 
 header h1 {
     margin: 0;
-    font-size: 2.5em;
-    letter-spacing: 2px;
 }
 
 .hamburger-menu {
@@ -70,14 +68,12 @@ section {
     padding: 10px;
     text-align: center;
     border-radius: 5px;
-    font-size: 1.1em;
 }
 
 h2 {
     color: #333;
     border-bottom: 2px solid #4a7c59;
     padding-bottom: 5px;
-    font-size: 1.8em;
 }
 
 table {
@@ -107,7 +103,127 @@ tr:hover {
     background-color: #f1f1f1;
 }
 
-/* Enhanced styling for auth-section */
+form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="file"],
+textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #4a7c59;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #3a6347;
+}
+
+#auth-toggle {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#auth-toggle button {
+    margin: 0 10px;
+    background-color: #666;
+}
+
+#auth-toggle button:hover {
+    background-color: #555;
+}
+
+#signup-feedback,
+#signin-feedback,
+#upload-feedback {
+    margin-top: 10px;
+    text-align: center;
+}
+
+#next-steps-section {
+    text-align: center;
+}
+
+#next-steps-section a {
+    display: inline-block;
+    margin-top: 10px;
+    color: #4a7c59;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#next-steps-section a:hover {
+    text-decoration: underline;
+}
+
+#profile-section {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+#profile-photo-container {
+    margin-top: 20px;
+}
+
+#profile-photo {
+    display: block;
+    margin: 10px 0;
+}
+
+#signout-btn {
+    background-color: #d9534f;
+    margin-top: 20px;
+}
+
+#signout-btn:hover {
+    background-color: #c9302c;
+}
+
+#delete-account-btn {
+    background-color: #d9534f;
+    margin-top: 10px;
+}
+
+#delete-account-btn:hover {
+    background-color: #c9302c;
+}
+
+/* Add thumbnail styling for leaderboard */
+.profile-thumbnail {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+/* Beautified styles for sign-up and sign-in forms */
 #auth-section {
     background-color: #fff;
     padding: 30px;
@@ -153,129 +269,52 @@ tr:hover {
     font-size: 1.5em;
 }
 
-form {
+#signup-form,
+#signin-form {
     background-color: transparent;
     padding: 0;
     box-shadow: none;
 }
 
-label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #333;
+#signup-form label,
+#signin-form label {
     font-size: 1em;
 }
 
-input[type="text"],
-input[type="password"],
-input[type="file"],
-textarea {
-    width: 100%;
+#signup-form input[type="text"],
+#signup-form input[type="password"],
+#signin-form input[type="text"],
+#signin-form input[type="password"] {
     padding: 10px;
-    margin-bottom: 15px;
     border: 1px solid #ccc;
     border-radius: 5px;
-    box-sizing: border-box;
-    font-size: 1em;
     transition: border-color 0.3s;
 }
 
-input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="file"]:focus,
-textarea:focus {
+#signup-form input[type="text"]:focus,
+#signup-form input[type="password"]:focus,
+#signin-form input[type="text"]:focus,
+#signin-form input[type="password"]:focus {
     border-color: #4a7c59;
     outline: none;
     box-shadow: 0 0 5px rgba(74, 124, 89, 0.3);
 }
 
-button {
-    background-color: #4a7c59;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1.1em;
+#signup-form button,
+#signin-form button {
     width: 100%;
+    padding: 10px;
+    font-size: 1.1em;
     transition: background-color 0.3s, transform 0.1s;
 }
 
-button:hover {
+#signup-form button:hover,
+#signin-form button:hover {
     background-color: #3a6347;
     transform: scale(1.02);
 }
 
-button:active {
+#signup-form button:active,
+#signin-form button:active {
     transform: scale(0.98);
-}
-
-#signup-feedback,
-#signin-feedback,
-#upload-feedback {
-    margin-top: 10px;
-    text-align: center;
-    font-size: 0.9em;
-}
-
-#next-steps-section {
-    text-align: center;
-}
-
-#next-steps-section a {
-    display: inline-block;
-    margin-top: 10px;
-    color: #4a7c59;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-#next-steps-section a:hover {
-    text-decoration: underline;
-}
-
-#profile-section {
-    max-width: 600px;
-    margin: 0 auto;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-}
-
-#profile-photo-container {
-    margin-top: 20px;
-}
-
-#profile-photo {
-    display: block;
-    margin: 10px 0;
-}
-
-#signout-btn {
-    background-color: #d9534f;
-    margin-top: 20px;
-}
-
-#signout-btn:hover {
-    background-color: #c9302c;
-}
-
-#delete-account-btn {
-    background-color: #d9534f;
-    margin-top: 10px;
-}
-
-#delete-account-btn:hover {
-    background-color: #c9302c;
-}
-
-/* Add thumbnail styling for leaderboard */
-.profile-thumbnail {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    vertical-align: middle;
-    margin-right: 10px;
 }
