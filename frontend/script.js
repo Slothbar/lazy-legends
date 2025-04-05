@@ -479,6 +479,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Handle "Back to Home" button in Profile Section
+    const backToHomeFromProfileBtn = document.getElementById('back-to-home-from-profile-btn');
+    if (backToHomeFromProfileBtn) {
+        backToHomeFromProfileBtn.addEventListener('click', () => {
+            document.querySelectorAll('section').forEach(section => section.style.display = 'block');
+            const profileSection = document.getElementById('profile-section');
+            profileSection.style.display = 'none';
+        });
+    }
+
     // Handle profile photo upload
     const uploadPhotoForm = document.getElementById('upload-photo-form');
     const uploadFeedback = document.getElementById('upload-feedback');
