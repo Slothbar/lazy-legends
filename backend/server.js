@@ -21,8 +21,8 @@ app.use(express.json());
 app.use(session({
     store: new SQLiteStore({
         db: 'sessions.db',
-        dir: '/app/data', // Ensure this directory exists on Render
-        concurrentDB: true // Allow concurrent database access
+        dir: '/app/data',
+        concurrentDB: true
     }),
     secret: process.env.SESSION_SECRET || 'your-session-secret',
     resave: false,
@@ -73,8 +73,18 @@ if (!slothTokenId || slothTokenId.includes('<your-sloth-token-id>')) {
     throw new Error('SLOTH_TOKEN_ID environment variable is not set or invalid');
 }
 
+// Validate private key format
+let privateKey;
+try {
+    privateKey = PrivateKey.fromString(treasuryPrivateKey);
+    console.log('Private key successfully parsed');
+} catch (error) {
+    console.error('Error parsing TREASURY_PRIVATE_KEY:', error);
+    throw new Error('TREASURY_PRIVATE_KEY is invalid or malformed');
+}
+
 const client = Client.forMainnet(); // Using Mainnet
-client.setOperator(AccountId.fromString(treasuryAccountId), PrivateKey.fromString(treasuryPrivateKey));
+client.setOperator(AccountId.fromString(treasuryAccountId), privateKey);
 
 const lastChecked = {};
 
