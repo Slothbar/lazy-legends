@@ -204,57 +204,46 @@ footer {
     font-size: 14px;
 }
 
-/* Beautified styles for sign-up and sign-in forms */
+/* Original styles for sign-up and sign-in forms (pre-beautification) */
 #auth-section {
-    background-color: #222;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     max-width: 500px;
     margin: 0 auto 40px;
-    border: 1px solid #444;
 }
 
 #auth-toggle {
-    display: flex;
-    justify-content: center;
+    text-align: center;
     margin-bottom: 20px;
 }
 
 #auth-toggle button {
     margin: 0 10px;
-    padding: 10px 20px;
-    font-size: 1.1em;
-    border: none;
-    border-radius: 25px;
     background-color: #666;
     color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.1s;
+    font-size: 16px;
 }
 
 #auth-toggle button:hover {
     background-color: #555;
-    transform: scale(1.05);
-}
-
-#auth-toggle button:active {
-    transform: scale(0.95);
 }
 
 #signup-form-container h2,
 #signin-form-container h2 {
     text-align: center;
-    color: #4a7c59;
+    color: #fff;
     margin-bottom: 20px;
     font-size: 1.5em;
 }
 
 #signup-form,
 #signin-form {
-    background-color: transparent;
-    padding: 0;
-    box-shadow: none;
+    background-color: #222;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
 #signup-form label,
@@ -267,21 +256,11 @@ footer {
 #signup-form input[type="password"],
 #signin-form input[type="text"],
 #signin-form input[type="password"] {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    transition: border-color 0.3s;
+    padding: 8px;
+    border: 1px solid #444;
+    border-radius: 4px;
     background-color: #333;
     color: #fff;
-}
-
-#signup-form input[type="text"]:focus,
-#signup-form input[type="password"]:focus,
-#signin-form input[type="text"]:focus,
-#signin-form input[type="password"]:focus {
-    border-color: #4a7c59;
-    outline: none;
-    box-shadow: 0 0 5px rgba(74, 124, 89, 0.3);
 }
 
 #signup-form button,
@@ -289,18 +268,16 @@ footer {
     width: 100%;
     padding: 10px;
     font-size: 1.1em;
-    transition: background-color 0.3s, transform 0.1s;
+    background-color: #4a7c59;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 #signup-form button:hover,
 #signin-form button:hover {
     background-color: #3a6347;
-    transform: scale(1.02);
-}
-
-#signup-form button:active,
-#signin-form button:active {
-    transform: scale(0.98);
 }
 
 #signup-feedback,
@@ -329,6 +306,17 @@ footer {
 
 #next-steps-section button {
     margin-top: 10px;
+    background-color: #4a7c59;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#next-steps-section button:hover {
+    background-color: #3a6347;
 }
 
 /* Profile Section */
@@ -380,6 +368,16 @@ footer {
 
 #back-to-home-from-profile-btn {
     margin-top: 10px;
+    background-color: #4a7c59;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#back-to-home-from-profile-btn:hover {
+    background-color: #3a6347;
 }
 
 /* Admin Panel Section */
@@ -409,10 +407,24 @@ footer {
     background-color: #333;
     color: #fff;
     border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 #admin-panel button {
     margin: 5px 0;
+    background-color: #4a7c59;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#admin-panel button:hover {
+    background-color: #3a6347;
 }
 
 /* Add thumbnail styling for leaderboard */
