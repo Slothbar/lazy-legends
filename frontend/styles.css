@@ -57,6 +57,9 @@ body {
 header {
     text-align: center;
     padding: 40px 0;
+    background-color: #4a7c59;
+    border-radius: 10px;
+    margin-bottom: 20px;
 }
 
 header img {
