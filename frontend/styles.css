@@ -208,6 +208,10 @@ footer {
 #auth-section {
     max-width: 500px;
     margin: 0 auto 40px;
+    background-color: #222;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
 #auth-toggle {
@@ -240,10 +244,9 @@ footer {
 
 #signup-form,
 #signin-form {
-    background-color: #222;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    background-color: transparent;
+    padding: 0;
+    box-shadow: none;
 }
 
 #signup-form label,
@@ -261,6 +264,8 @@ footer {
     border-radius: 4px;
     background-color: #333;
     color: #fff;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 #signup-form button,
