@@ -13,6 +13,10 @@
         <div class="announcement-bar">
             <div class="announcement-text" id="announcement-text"></div>
         </div>
+        <!-- Season Countdown Timer -->
+        <div id="season-timer" class="card">
+            <p id="timer-text">Loading season timer...</p>
+        </div>
         <!-- Hamburger Menu -->
         <div class="hamburger-menu">
             <div class="hamburger-icon">
@@ -21,8 +25,8 @@
                 <span></span>
             </div>
             <div class="menu-content">
-                <button id="dark-mode-toggle" aria-label="Toggle dark mode">
                 <a href="#" id="admin-link">Admin Panel</a>
+                <button id="dark-mode-toggle" aria-label="Toggle dark mode">
                     <span class="toggle-icon"></span>
                     Dark Mode
                 </button>
@@ -131,6 +135,7 @@
                 <button id="reset-leaderboard-btn" class="primary-btn">Reset Leaderboard</button>
                 <button id="view-all-users-btn" class="primary-btn">View All Users</button>
                 <button id="edit-announcement-btn" class="primary-btn">Edit Announcement</button>
+                <button id="edit-season-dates-btn" class="primary-btn">Edit Season Dates</button>
                 <button id="back-to-home-btn" class="primary-btn">Back to Home</button>
             </div>
             <div id="admin-users" style="display: none;">
@@ -152,6 +157,15 @@
                 <textarea id="announcement-input" rows="3" placeholder="Enter the announcement text (e.g., Welcome to Season 2 of Lazy Legends! 🦥)"></textarea>
                 <button id="save-announcement-btn" class="primary-btn">Save Announcement</button>
                 <button id="back-to-controls-from-announcement-btn" class="primary-btn">Back to Controls</button>
+            </div>
+            <div id="admin-season-dates" style="display: none;">
+                <h3>Edit Season Dates</h3>
+                <label for="season-start-date">Season Start Date (YYYY-MM-DD):</label>
+                <input type="date" id="season-start-date" required>
+                <label for="season-end-date">Season End Date (YYYY-MM-DD):</label>
+                <input type="date" id="season-end-date" required>
+                <button id="save-season-dates-btn" class="primary-btn">Save Season Dates</button>
+                <button id="back-to-controls-from-season-dates-btn" class="primary-btn">Back to Controls</button>
             </div>
         </section>
 
