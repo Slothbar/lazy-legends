@@ -19,6 +19,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Handle dark mode toggle
+    const toggleButton = document.getElementById('dark-mode-toggle');
+    const body = document.body;
+
+    if (toggleButton) {
+        // Load saved theme from localStorage
+        if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark-mode');
+            toggleButton.setAttribute('aria-label', 'Switch to light mode');
+        }
+
+        // Toggle theme on button click
+        toggleButton.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            const isDarkMode = body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            toggleButton.setAttribute('aria-label', isDarkMode ? 'Switch to light mode' : 'Toggle dark mode');
+            hamburgerMenu.classList.remove('active'); // Close menu after toggle
+        });
+    }
+
     // Handle admin panel login
     const adminLink = document.getElementById('admin-link');
     const adminPanel = document.getElementById('admin-panel');
