@@ -110,15 +110,20 @@ body {
     margin-top: 0.5rem;
 }
 
-.menu-content a {
+.menu-content a, .menu-content button {
     color: var(--text);
     padding: 0.75rem 1rem;
     text-decoration: none;
     display: block;
     font-size: 0.9rem;
+    border: none;
+    background: none;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
 }
 
-.menu-content a:hover {
+.menu-content a:hover, .menu-content button:hover {
     background: var(--border);
 }
 
@@ -128,20 +133,8 @@ body {
 
 /* Dark Mode Toggle */
 #dark-mode-toggle {
-    background: none;
-    border: none;
-    padding: 0.75rem 1rem;
-    cursor: pointer;
     display: flex;
     align-items: center;
-    width: 100%;
-    text-align: left;
-    font-size: 0.9rem;
-    color: var(--text);
-}
-
-#dark-mode-toggle:hover {
-    background: var(--border);
 }
 
 .toggle-icon {
@@ -342,4 +335,304 @@ footer p {
 .social-links {
     display: flex;
     justify-content: center;
-    gap:
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.social-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: var(--primary);
+    border-radius: 50%;
+}
+
+.x-icon::before {
+    content: 'X';
+    color: #fff;
+    font-size: 0.8rem;
+    line-height: 20px;
+    text-align: center;
+    display: block;
+}
+
+.hedera-icon::before {
+    content: 'H';
+    color: #fff;
+    font-size: 0.8rem;
+    line-height: 20px;
+    text-align: center;
+    display: block;
+}
+
+.social-links a:hover .social-icon {
+    background: var(--accent);
+}
+
+/* Auth Section */
+#auth-section.card {
+    max-width: 100%;
+}
+
+#auth-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+#auth-toggle button {
+    background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    min-height: 44px;
+    transition: all 0.3s ease;
+}
+
+#auth-toggle button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+#auth-toggle button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+#signup-form-container h2,
+#signin-form-container h2 {
+    text-align: center;
+    color: var(--primary);
+}
+
+#signup-form,
+#signin-form {
+    background-color: transparent;
+    padding: 0;
+    box-shadow: none;
+}
+
+#signup-form label,
+#signin-form label {
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    color: var(--text);
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+#signup-form input[type="text"],
+#signup-form input[type="password"],
+#signin-form input[type="text"],
+#signin-form input[type="password"] {
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text);
+    width: 100%;
+    box-sizing: border-box;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    min-height: 48px;
+    transition: all 0.3s ease;
+}
+
+#signup-form input:focus,
+#signin-form input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.primary-btn {
+    background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    width: 100%;
+    min-height: 44px;
+    transition: all 0.3s ease;
+}
+
+.primary-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.primary-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.primary-btn.highlight {
+    background: linear-gradient(to bottom, var(--accent), var(--accent-dark));
+}
+
+.primary-btn.highlight:hover {
+    background: linear-gradient(to bottom, #FF8A75, #F47066);
+}
+
+.destructive-btn {
+    background: linear-gradient(to bottom, var(--accent), var(--accent-dark));
+    color: #fff;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    min-height: 44px;
+    transition: all 0.3s ease;
+}
+
+.destructive-btn:hover {
+    transform: scale(1.05);
+    background: linear-gradient(to bottom, #FF8A75, #F47066);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+#signup-feedback,
+#signin-feedback,
+#upload-feedback {
+    margin-top: 0.6rem;
+    text-align: center;
+    font-size: clamp(0.8rem, 2vw, 0.9rem);
+}
+
+/* Next Steps Section */
+#next-steps-section.card p {
+    color: var(--text);
+    font-size: clamp(0.9rem, 2vw, 1rem);
+}
+
+/* Profile Section */
+#profile-section.card p {
+    color: var(--text);
+    font-size: clamp(0.9rem, 2vw, 1rem);
+}
+
+#profile-photo-container {
+    margin-top: 1.25rem;
+}
+
+#profile-photo.profile-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+#profile-photo.profile-image:hover {
+    transform: scale(1.02);
+}
+
+#profile-section input[type="file"] {
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+
+/* Admin Panel Section */
+#admin-panel.card p {
+    color: var(--text);
+    font-size: clamp(0.9rem, 2vw, 1rem);
+}
+
+#admin-panel input[type="password"],
+#admin-panel textarea {
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.75rem;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    min-height: 48px;
+}
+
+#admin-panel input:focus,
+#admin-panel textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Thumbnail Styling */
+.profile-thumbnail {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 0.6rem;
+    object-fit: cover;
+}
+
+/* Advertisement Images */
+.ad-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    object-fit: cover;
+}
+
+/* Responsive Design (Mobile-First) */
+#auth-section.card,
+#profile-section.card,
+#admin-panel.card {
+    max-width: 100%;
+}
+
+@media screen and (min-width: 768px) {
+    .container {
+        max-width: 960px;
+        padding: 2rem;
+    }
+
+    .card {
+        padding: 2rem;
+    }
+
+    header.card {
+        padding: 2.5rem;
+    }
+
+    header img.header-image {
+        width: 100px;
+        height: 100px;
+    }
+
+    #auth-toggle {
+        flex-direction: row;
+    }
+
+    #how-to-play-section img.section-image {
+        max-width: 200px;
+    }
+
+    .ad-container {
+        flex-direction: row;
+    }
+
+    .ad-image {
+        max-width: 300px;
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    .container {
+        max-width: 1200px;
+    }
+}
