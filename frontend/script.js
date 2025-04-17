@@ -289,8 +289,41 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td>${user.xUsername}</td>
                             <td>${user.hederaWallet || 'N/A'}</td>
                             <td>${user.sloMoPoints}</td>
+                            <td><button class="delete-user-btn destructive-btn" data-username="${user.xUsername}">Delete</button></td>
                         `;
                         usersTableBody.appendChild(row);
+                    });
+
+                    // Add event listeners for delete buttons
+                    document.querySelectorAll('.delete-user-btn').forEach(button => {
+                        button.addEventListener('click', async () => {
+                            const xUsername = button.dataset.username;
+                            if (!confirm(`Are you sure you want to permanently delete ${xUsername}? This action cannot be undone.`)) {
+                                return;
+                            }
+
+                            const adminPassword = adminPasswordInput.dataset.password;
+                            try {
+                                const response = await fetch('/api/admin/delete-user', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ adminPassword, xUsername })
+                                });
+
+                                if (response.ok) {
+                                    alert(`Successfully deleted user ${xUsername}!`);
+                                    button.closest('tr').remove();
+                                    fetchLeaderboard();
+                                    fetchRecentActivity();
+                                } else {
+                                    const errorData = await response.json();
+                                    alert(`Error: ${errorData.error || 'Unknown error'}`);
+                                }
+                            } catch (error) {
+                                console.error(`Error deleting user ${xUsername}:`, error);
+                                alert('Error deleting user. Check the console for details.');
+                            }
+                        });
                     });
 
                     adminControls.style.display = 'none';
