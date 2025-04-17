@@ -619,38 +619,64 @@ app.post('/api/admin/delete-user', (req, res) => {
                     }
                 }
 
-                // Delete user from users table (cascades to season_rewards and point_activity)
+                // Manually delete from season_rewards
                 db.run(
-                    `DELETE FROM users WHERE xUsername = ?`,
+                    `DELETE FROM season_rewards WHERE xUsername = ?`,
                     [xUsername],
                     (err) => {
                         if (err) {
-                            console.error('Error deleting user:', err);
+                            console.error('Error deleting from season_rewards:', err);
                             db.run('ROLLBACK');
                             return res.status(500).json({ error: `Database error: ${err.message}` });
                         }
 
-                        // Log deletion in audit_log
+                        // Manually delete from point_activity
                         db.run(
-                            `INSERT INTO audit_log (action, xUsername, timestamp) VALUES (?, ?, ?)`,
-                            ['admin_delete_user', xUsername, new Date().toISOString()],
+                            `DELETE FROM point_activity WHERE xUsername = ?`,
+                            [xUsername],
                             (err) => {
                                 if (err) {
-                                    console.error('Error logging deletion:', err);
+                                    console.error('Error deleting from point_activity:', err);
                                     db.run('ROLLBACK');
                                     return res.status(500).json({ error: `Database error: ${err.message}` });
                                 }
 
-                                // Commit transaction
-                                db.run('COMMIT', (err) => {
-                                    if (err) {
-                                        console.error('Error committing transaction:', err);
-                                        db.run('ROLLBACK');
-                                        return res.status(500).json({ error: `Database error: ${err.message}` });
+                                // Delete from users table
+                                db.run(
+                                    `DELETE FROM users WHERE xUsername = ?`,
+                                    [xUsername],
+                                    (err) => {
+                                        if (err) {
+                                            console.error('Error deleting user:', err);
+                                            db.run('ROLLBACK');
+                                            return res.status(500).json({ error: `Database error: ${err.message}` });
+                                        }
+
+                                        // Log deletion in audit_log
+                                        db.run(
+                                            `INSERT INTO audit_log (action, xUsername, timestamp) VALUES (?, ?, ?)`,
+                                            ['admin_delete_user', xUsername, new Date().toISOString()],
+                                            (err) => {
+                                                if (err) {
+                                                    console.error('Error logging deletion:', err);
+                                                    db.run('ROLLBACK');
+                                                    return res.status(500).json({ error: `Database error: ${err.message}` });
+                                                }
+
+                                                // Commit transaction
+                                                db.run('COMMIT', (err) => {
+                                                    if (err) {
+                                                        console.error('Error committing transaction:', err);
+                                                        db.run('ROLLBACK');
+                                                        return res.status(500).json({ error: `Database error: ${err.message}` });
+                                                    }
+                                                    console.log(`Deleted user ${xUsername} by admin`);
+                                                    res.status(200).json({ message: `Successfully deleted user ${xUsername}` });
+                                                });
+                                            }
+                                        );
                                     }
-                                    console.log(`Deleted user ${xUsername} by admin`);
-                                    res.status(200).json({ message: `Successfully deleted user ${xUsername}` });
-                                });
+                                );
                             }
                         );
                     }
