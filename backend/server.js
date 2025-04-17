@@ -42,10 +42,10 @@ app.use((err, req, res, next) => {
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Serve uploaded photos
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../Uploads')));
 
 // Configure multer for file uploads
-const uploadDir = path.join(__dirname, '../uploads');
+const uploadDir = path.join(__dirname, '../Uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -369,7 +369,20 @@ app.get('/profile/:username', (req, res) => {
 app.get('/api/whoami', (req, res) => {
     console.log('Session data:', req.session);
     if (req.session.xUsername) {
-        res.json({ xUsername: req.session.xUsername });
+        db.get(
+            `SELECT xUsername, hederaWallet, sloMoPoints, profilePhoto FROM users WHERE xUsername = ?`,
+            [req.session.xUsername],
+            (err, user) => {
+                if (err) {
+                    console.error('Error fetching user data:', err);
+                    return res.status(500).json({ error: 'Database error' });
+                }
+                if (!user) {
+                    return res.status(404).json({ error: 'User not found' });
+                }
+                res.json(user);
+            }
+        );
     } else {
         res.status(401).json({ error: 'Not logged in' });
     }
@@ -491,6 +504,57 @@ app.post('/api/admin/update-announcement', (req, res) => {
             }
             console.log('Updated announcement:', text);
             res.status(200).json({ message: 'Announcement updated successfully' });
+        }
+    );
+});
+
+app.get('/api/admin/season-dates', (req, res) => {
+    db.get(
+        `SELECT startDate, endDate FROM season_dates WHERE id = 1`,
+        [],
+        (err, row) => {
+            if (err) {
+                console.error('Error fetching season dates:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            if (!row) {
+                return res.status(404).json({ error: 'Season dates not found' });
+            }
+            res.json({ startDate: row.startDate, endDate: row.endDate });
+        }
+    );
+});
+
+app.post('/api/admin/update-season-dates', (req, res) => {
+    const { adminPassword, startDate, endDate } = req.body;
+
+    if (adminPassword !== ADMIN_PASSWORD) {
+        return res.status(403).json({ error: 'Unauthorized: Invalid admin password' });
+    }
+
+    if (!startDate || !endDate) {
+        return res.status(400).json({ error: 'Start and end dates are required' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return res.status(400).json({ error: 'Invalid date format' });
+    }
+    if (start >= end) {
+        return res.status(400).json({ error: 'End date must be after start date' });
+    }
+
+    db.run(
+        `INSERT OR REPLACE INTO season_dates (id, startDate, endDate) VALUES (1, ?, ?)`,
+        [startDate, endDate],
+        (err) => {
+            if (err) {
+                console.error('Error updating season dates:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            console.log(`Updated season dates: start=${startDate}, end=${endDate}`);
+            res.status(200).json({ message: 'Season dates updated successfully' });
         }
     );
 });
