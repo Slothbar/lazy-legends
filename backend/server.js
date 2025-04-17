@@ -586,54 +586,78 @@ app.post('/api/admin/delete-user', (req, res) => {
         return res.status(400).json({ error: 'X username is required' });
     }
 
-    db.get(
-        `SELECT xUsername, profilePhoto FROM users WHERE xUsername = ?`,
-        [xUsername],
-        (err, row) => {
-            if (err) {
-                console.error('Error checking user:', err);
-                return res.status(500).json({ error: 'Database error' });
-            }
-            if (!row) {
-                return res.status(404).json({ error: `User ${xUsername} not found` });
-            }
-
-            // Delete profile photo if exists
-            if (row.profilePhoto) {
-                const photoPath = path.join(__dirname, '../', row.profilePhoto);
-                fs.unlink(photoPath, (err) => {
-                    if (err && err.code !== 'ENOENT') {
-                        console.error(`Error deleting profile photo for ${xUsername}:`, err);
-                    }
-                });
-            }
-
-            // Delete user from users table (cascades to season_rewards and point_activity)
-            db.run(
-                `DELETE FROM users WHERE xUsername = ?`,
-                [xUsername],
-                (err) => {
-                    if (err) {
-                        console.error('Error deleting user:', err);
-                        return res.status(500).json({ error: 'Database error' });
-                    }
-
-                    // Log deletion in audit_log
-                    db.run(
-                        `INSERT INTO audit_log (action, xUsername, timestamp) VALUES (?, ?, ?)`,
-                        ['admin_delete_user', xUsername, new Date().toISOString()],
-                        (err) => {
-                            if (err) {
-                                console.error('Error logging deletion:', err);
-                            }
-                            console.log(`Deleted user ${xUsername} by admin`);
-                            res.status(200).json({ message: `Successfully deleted user ${xUsername}` });
-                        }
-                    );
-                }
-            );
+    // Begin transaction
+    db.run('BEGIN TRANSACTION', (err) => {
+        if (err) {
+            console.error('Error starting transaction:', err);
+            return res.status(500).json({ error: 'Database error: Failed to start transaction' });
         }
-    );
+
+        db.get(
+            `SELECT xUsername, profilePhoto FROM users WHERE xUsername = ?`,
+            [xUsername],
+            (err, row) => {
+                if (err) {
+                    console.error('Error checking user:', err);
+                    db.run('ROLLBACK');
+                    return res.status(500).json({ error: `Database error: ${err.message}` });
+                }
+                if (!row) {
+                    db.run('ROLLBACK');
+                    return res.status(404).json({ error: `User ${xUsername} not found` });
+                }
+
+                // Delete profile photo if exists
+                if (row.profilePhoto) {
+                    const photoPath = path.join(__dirname, '../', row.profilePhoto);
+                    try {
+                        fs.unlinkSync(photoPath);
+                    } catch (err) {
+                        if (err.code !== 'ENOENT') {
+                            console.error(`Error deleting profile photo for ${xUsername}:`, err);
+                        }
+                    }
+                }
+
+                // Delete user from users table (cascades to season_rewards and point_activity)
+                db.run(
+                    `DELETE FROM users WHERE xUsername = ?`,
+                    [xUsername],
+                    (err) => {
+                        if (err) {
+                            console.error('Error deleting user:', err);
+                            db.run('ROLLBACK');
+                            return res.status(500).json({ error: `Database error: ${err.message}` });
+                        }
+
+                        // Log deletion in audit_log
+                        db.run(
+                            `INSERT INTO audit_log (action, xUsername, timestamp) VALUES (?, ?, ?)`,
+                            ['admin_delete_user', xUsername, new Date().toISOString()],
+                            (err) => {
+                                if (err) {
+                                    console.error('Error logging deletion:', err);
+                                    db.run('ROLLBACK');
+                                    return res.status(500).json({ error: `Database error: ${err.message}` });
+                                }
+
+                                // Commit transaction
+                                db.run('COMMIT', (err) => {
+                                    if (err) {
+                                        console.error('Error committing transaction:', err);
+                                        db.run('ROLLBACK');
+                                        return res.status(500).json({ error: `Database error: ${err.message}` });
+                                    }
+                                    console.log(`Deleted user ${xUsername} by admin`);
+                                    res.status(200).json({ message: `Successfully deleted user ${xUsername}` });
+                                });
+                            }
+                        );
+                    }
+                );
+            }
+        );
+    });
 });
 
 app.post('/api/admin/clear-leaderboard', (req, res) => {
