@@ -35,7 +35,7 @@ db.serialize(() => {
         )
     `);
 
-    // New season_rewards table to track reward claims
+    // Existing season_rewards table to track reward claims
     db.run(`
         CREATE TABLE IF NOT EXISTS season_rewards (
             seasonId INTEGER NOT NULL,
@@ -45,6 +45,15 @@ db.serialize(() => {
             claimed BOOLEAN DEFAULT 0,
             PRIMARY KEY (seasonId, xUsername),
             FOREIGN KEY (xUsername) REFERENCES users(xUsername)
+        )
+    `);
+
+    // New season_dates table to store season start and end dates
+    db.run(`
+        CREATE TABLE IF NOT EXISTS season_dates (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            startDate TEXT NOT NULL,
+            endDate TEXT NOT NULL
         )
     `);
 
@@ -80,6 +89,26 @@ db.serialize(() => {
                     console.log('Initialized first season with timestamp:', initialTimestamp);
                 }
             });
+        }
+    });
+
+    // Insert default season dates if none exist
+    db.get(`SELECT COUNT(*) as count FROM season_dates`, (err, row) => {
+        if (err) {
+            console.error('Error checking season_dates table:', err);
+            return;
+        }
+        if (row.count === 0) {
+            db.run(
+                `INSERT INTO season_dates (id, startDate, endDate) VALUES (1, '2025-05-01T00:00:00-05:00', '2025-05-29T00:00:00-05:00')`,
+                (err) => {
+                    if (err) {
+                        console.error('Error inserting default season dates:', err);
+                    } else {
+                        console.log('Initialized default season dates: May 1 to May 29, 2025 EST');
+                    }
+                }
+            );
         }
     });
 });
