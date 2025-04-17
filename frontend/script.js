@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load season winners on page load
     fetchSeasonWinners();
 
+    // Load season dates and start timer
+    fetchSeasonDates();
+
     // Handle hamburger menu toggle
     const hamburgerMenu = document.querySelector('.hamburger-menu');
     const hamburgerIcon = document.querySelector('.hamburger-icon');
@@ -40,6 +43,67 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Handle season timer
+    let seasonStartDate = new Date('2025-05-01T00:00:00-05:00');
+    let seasonEndDate = new Date('2025-05-29T00:00:00-05:00');
+
+    function updateSeasonTimer() {
+        const now = new Date();
+        const timerText = document.getElementById('timer-text');
+        if (!timerText) return;
+
+        let targetDate, prefix;
+        if (now < seasonStartDate) {
+            targetDate = seasonStartDate;
+            prefix = 'Season Starts In: ';
+        } else if (now < seasonEndDate) {
+            targetDate = seasonEndDate;
+            prefix = 'Season Ends In: ';
+        } else {
+            timerText.textContent = 'Season has ended! Check back for the next season.';
+            return;
+        }
+
+        const diff = targetDate - now;
+        if (diff <= 0) {
+            timerText.textContent = 'Season has ended! Check back for the next season.';
+            return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        timerText.textContent = `${prefix}${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    async function fetchSeasonDates() {
+        try {
+            const response = await fetch('/api/admin/season-dates', {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                seasonStartDate = new Date(data.startDate);
+                seasonEndDate = new Date(data.endDate);
+                localStorage.setItem('seasonDates', JSON.stringify({ startDate: data.startDate, endDate: data.endDate }));
+                updateSeasonTimer();
+                setInterval(updateSeasonTimer, 1000);
+            } else {
+                console.error('Error fetching season dates:', await response.json());
+                // Fallback to hardcoded dates
+                updateSeasonTimer();
+                setInterval(updateSeasonTimer, 1000);
+            }
+        } catch (error) {
+            console.error('Error fetching season dates:', error);
+            // Fallback to hardcoded dates
+            updateSeasonTimer();
+            setInterval(updateSeasonTimer, 1000);
+        }
+    }
+
     // Handle admin panel login
     const adminLink = document.getElementById('admin-link');
     const adminPanel = document.getElementById('admin-panel');
@@ -47,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminControls = document.getElementById('admin-controls');
     const adminUsers = document.getElementById('admin-users');
     const adminAnnouncement = document.getElementById('admin-announcement');
+    const adminSeasonDates = document.getElementById('admin-season-dates');
     const adminPasswordInput = document.getElementById('admin-password');
     const adminLoginBtn = document.getElementById('admin-login-btn');
     const backToHomeBtn = document.getElementById('back-to-home-btn');
@@ -54,9 +119,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetLeaderboardBtn = document.getElementById('reset-leaderboard-btn');
     const viewAllUsersBtn = document.getElementById('view-all-users-btn');
     const editAnnouncementBtn = document.getElementById('edit-announcement-btn');
+    const editSeasonDatesBtn = document.getElementById('edit-season-dates-btn');
     const saveAnnouncementBtn = document.getElementById('save-announcement-btn');
+    const saveSeasonDatesBtn = document.getElementById('save-season-dates-btn');
     const backToControlsBtn = document.getElementById('back-to-controls-btn');
     const backToControlsFromAnnouncementBtn = document.getElementById('back-to-controls-from-announcement-btn');
+    const backToControlsFromSeasonDatesBtn = document.getElementById('back-to-controls-from-season-dates-btn');
 
     if (adminLink) {
         adminLink.addEventListener('click', (e) => {
@@ -101,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminControls.style.display = 'none';
             adminUsers.style.display = 'none';
             adminAnnouncement.style.display = 'none';
+            adminSeasonDates.style.display = 'none';
             adminPasswordInput.value = '';
             window.history.pushState({}, '', '/');
         });
@@ -224,6 +293,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (editSeasonDatesBtn) {
+        editSeasonDatesBtn.addEventListener('click', async () => {
+            const startDateInput = document.getElementById('season-start-date');
+            const endDateInput = document.getElementById('season-end-date');
+            if (!startDateInput || !endDateInput) {
+                console.error('Season date inputs not found');
+                alert('Error: Season date inputs not found. Please check the page structure.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/season-dates');
+                if (response.ok) {
+                    const data = await response.json();
+                    startDateInput.value = data.startDate.split('T')[0];
+                    endDateInput.value = data.endDate.split('T')[0];
+                    adminControls.style.display = 'none';
+                    adminSeasonDates.style.display = 'block';
+                } else {
+                    const errorData = await response.json();
+                    console.error('Error fetching season dates:', errorData);
+                    alert(`Error fetching season dates: ${errorData.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error fetching season dates:', error);
+                alert('Error fetching season dates. Check the console for details.');
+            }
+        });
+    }
+
     if (saveAnnouncementBtn) {
         saveAnnouncementBtn.addEventListener('click', async () => {
             const adminPassword = adminPasswordInput.dataset.password;
@@ -264,6 +363,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (saveSeasonDatesBtn) {
+        saveSeasonDatesBtn.addEventListener('click', async () => {
+            const adminPassword = adminPasswordInput.dataset.password;
+            const startDateInput = document.getElementById('season-start-date');
+            const endDateInput = document.getElementById('season-end-date');
+            if (!startDateInput || !endDateInput) {
+                console.error('Season date inputs not found');
+                alert('Error: Season date inputs not found. Please check the page structure.');
+                return;
+            }
+
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates!');
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            if (start >= end) {
+                alert('End date must be after start date!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/update-season-dates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        adminPassword, 
+                        startDate: `${startDate}T00:00:00-05:00`, 
+                        endDate: `${endDate}T00:00:00-05:00` 
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Season dates updated successfully!');
+                    fetchSeasonDates();
+                    adminSeasonDates.style.display = 'none';
+                    adminControls.style.display = 'block';
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error updating season dates:', error);
+                alert('Error updating season dates. Check the console for details.');
+            }
+        });
+    }
+
     if (backToControlsBtn) {
         backToControlsBtn.addEventListener('click', () => {
             adminUsers.style.display = 'none';
@@ -274,6 +426,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (backToControlsFromAnnouncementBtn) {
         backToControlsFromAnnouncementBtn.addEventListener('click', () => {
             adminAnnouncement.style.display = 'none';
+            adminControls.style.display = 'block';
+        });
+    }
+
+    if (backToControlsFromSeasonDatesBtn) {
+        backToControlsFromSeasonDatesBtn.addEventListener('click', () => {
+            adminSeasonDates.style.display = 'none';
             adminControls.style.display = 'block';
         });
     }
