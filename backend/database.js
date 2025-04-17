@@ -1,13 +1,18 @@
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('/app/data/lazy-legends.db');
 
+// Enable foreign key constraints
+db.run('PRAGMA foreign_keys = ON');
+
 db.serialize(() => {
     // Existing users table
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
             xUsername TEXT PRIMARY KEY,
             hederaWallet TEXT,
-            sloMoPoints INTEGER DEFAULT 0
+            sloMoPoints INTEGER DEFAULT 0,
+            password TEXT,
+            profilePhoto TEXT
         )
     `);
 
@@ -35,7 +40,7 @@ db.serialize(() => {
         )
     `);
 
-    // Existing season_rewards table to track reward claims
+    // Existing season_rewards table with ON DELETE CASCADE
     db.run(`
         CREATE TABLE IF NOT EXISTS season_rewards (
             seasonId INTEGER NOT NULL,
@@ -44,16 +49,37 @@ db.serialize(() => {
             rewardAmount INTEGER NOT NULL, -- Amount in $SLOTH (e.g., 100 for 1st)
             claimed BOOLEAN DEFAULT 0,
             PRIMARY KEY (seasonId, xUsername),
-            FOREIGN KEY (xUsername) REFERENCES users(xUsername)
+            FOREIGN KEY (xUsername) REFERENCES users(xUsername) ON DELETE CASCADE
         )
     `);
 
-    // New season_dates table to store season start and end dates
+    // Existing season_dates table
     db.run(`
         CREATE TABLE IF NOT EXISTS season_dates (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             startDate TEXT NOT NULL,
             endDate TEXT NOT NULL
+        )
+    `);
+
+    // Existing point_activity table with ON DELETE CASCADE
+    db.run(`
+        CREATE TABLE IF NOT EXISTS point_activity (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            xUsername TEXT NOT NULL,
+            points INTEGER NOT NULL,
+            timestamp TEXT NOT NULL,
+            FOREIGN KEY (xUsername) REFERENCES users(xUsername) ON DELETE CASCADE
+        )
+    `);
+
+    // New audit_log table to track admin actions
+    db.run(`
+        CREATE TABLE IF NOT EXISTS audit_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            action TEXT NOT NULL,
+            xUsername TEXT NOT NULL,
+            timestamp TEXT NOT NULL
         )
     `);
 
