@@ -13,10 +13,10 @@
     --input-bg: #fff;
     --table-header-bg: linear-gradient(to right, #6B9080, #5A7B6C);
     --table-text: #fff;
-    --background-image: url('https://ibb.co/WNybDDPW'); /* Replace with your Imgur-hosted PNG from Freepik: https://www.freepik.com/free-vector/hand-drawn-tropical-leaves-background_14027682.htm */
+    --background-image: url('https://i.imgur.com/6p8xZ7L.png'); /* Transparent green jungle leaf pattern */
 }
 
-/* Attribution: Jungle leaf pattern by Freepik (https://www.freepik.com/free-vector/hand-drawn-tropical-leaves-background_14027682.htm) */
+/* Attribution: Jungle leaf pattern sourced from public domain PNG repository */
 .dark-mode {
     --background: #1A3C34;
     --card-bg: #2A4B44;
@@ -31,7 +31,7 @@
     --input-bg: #3B6B5F;
     --table-header-bg: linear-gradient(to right, #A4C3B2, #8BA89A);
     --table-text: #E9ECEF;
-    --background-image: url('https://your-hosted-image.com/jungle-leaf-pattern.png'); /* Same PNG, adjusted opacity for dark mode */
+    --background-image: url('https://i.imgur.com/6p8xZ7L.png'); /* Same PNG, adjusted opacity */
 }
 
 /* General Styles */
@@ -372,6 +372,13 @@ td {
     color: var(--text);
 }
 
+/* Admin Users Table */
+#users-table .delete-user-btn {
+    padding: 0.5rem;
+    font-size: clamp(0.8rem, 2vw, 0.9rem);
+    min-height: 36px;
+}
+
 /* Footer */
 footer.card {
     text-align: center;
@@ -550,6 +557,7 @@ footer p {
     border-radius: 8px;
     cursor: pointer;
     font-size: clamp(0.9rem, 2vw, 1rem);
+    width: 100%;
     min-height: 44px;
     transition: all 0.3s ease;
 }
