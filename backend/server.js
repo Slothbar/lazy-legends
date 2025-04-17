@@ -93,7 +93,6 @@ console.log('ADMIN_PASSWORD loaded:', ADMIN_PASSWORD);
 
 // Migrate existing users to add default password
 db.serialize(() => {
-    // First, ensure the new columns exist
     db.run(`
         ALTER TABLE users ADD COLUMN password TEXT
     `, (err) => {
@@ -110,7 +109,6 @@ db.serialize(() => {
         }
     });
 
-    // Update existing users with a default password
     bcrypt.hash('defaultpassword123', 10, (err, hash) => {
         if (err) {
             console.error('Error hashing default password:', err);
@@ -147,18 +145,15 @@ async function appendToGoogleSheet(xUsername, hederaWallet) {
 app.post('/api/signup', async (req, res) => {
     const { xUsername, password, hederaWallet } = req.body;
 
-    // Validate X username
     const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
     if (!xUsername || !xUsernameRegex.test(xUsername)) {
         return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
     }
 
-    // Validate password
     if (!password || password.length < 8) {
         return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
     }
 
-    // Validate Hedera wallet address if provided
     let walletAddress = hederaWallet || 'N/A';
     if (hederaWallet) {
         const walletRegex = /^0\.0\.\d+$/;
@@ -168,10 +163,8 @@ app.post('/api/signup', async (req, res) => {
         walletAddress = hederaWallet;
     }
 
-    // Normalize xUsername to lowercase for consistency
     const normalizedXUsername = xUsername.toLowerCase();
 
-    // Check if username already exists
     db.get(`SELECT xUsername FROM users WHERE xUsername = ?`, [normalizedXUsername], async (err, row) => {
         if (err) {
             console.error('Error checking username:', err);
@@ -181,14 +174,10 @@ app.post('/api/signup', async (req, res) => {
             return res.status(400).json({ error: 'Username already taken.' });
         }
 
-        // Hash the password
         try {
             const hashedPassword = await bcrypt.hash(password, 10);
-
-            // Add 5 bonus SloMo Points if wallet address is provided
             const bonusPoints = walletAddress !== 'N/A' ? 5 : 0;
 
-            // Insert the new user
             db.run(
                 `INSERT INTO users (xUsername, password, hederaWallet, sloMoPoints) VALUES (?, ?, ?, ?)`,
                 [normalizedXUsername, hashedPassword, walletAddress, bonusPoints],
@@ -214,21 +203,17 @@ app.post('/api/signup', async (req, res) => {
 app.post('/api/signin', (req, res) => {
     const { xUsername, password } = req.body;
 
-    // Validate X username
     const xUsernameRegex = /^@[a-zA-Z0-9_]{1,15}$/;
     if (!xUsername || !xUsernameRegex.test(xUsername)) {
         return res.status(400).json({ error: 'Invalid X username. It must start with @ and contain only letters, numbers, or underscores (e.g., @slothhbar).' });
     }
 
-    // Validate password
     if (!password) {
         return res.status(400).json({ error: 'Password is required.' });
     }
 
-    // Normalize xUsername to lowercase for consistency
     const normalizedXUsername = xUsername.toLowerCase();
 
-    // Check if user exists
     db.get(`SELECT * FROM users WHERE xUsername = ?`, [normalizedXUsername], async (err, user) => {
         if (err) {
             console.error('Error fetching user:', err);
@@ -238,7 +223,6 @@ app.post('/api/signin', (req, res) => {
             return res.status(401).json({ error: 'Invalid username or password.' });
         }
 
-        // Compare passwords
         try {
             const match = await bcrypt.compare(password, user.password);
             if (match) {
@@ -274,17 +258,26 @@ app.post('/api/delete-account', (req, res) => {
 
     const username = req.session.xUsername;
 
-    // Delete user from season_rewards first (due to foreign key constraint)
-    db.run(
-        `DELETE FROM season_rewards WHERE xUsername = ?`,
+    db.get(
+        `SELECT profilePhoto FROM users WHERE xUsername = ?`,
         [username],
-        (err) => {
+        (err, row) => {
             if (err) {
-                console.error('Error deleting user from season_rewards:', err);
+                console.error('Error fetching user:', err);
                 return res.status(500).json({ error: 'Database error' });
             }
 
-            // Delete user from users table
+            // Delete profile photo if exists
+            if (row && row.profilePhoto) {
+                const photoPath = path.join(__dirname, '../', row.profilePhoto);
+                fs.unlink(photoPath, (err) => {
+                    if (err && err.code !== 'ENOENT') {
+                        console.error(`Error deleting profile photo for ${username}:`, err);
+                    }
+                });
+            }
+
+            // Delete user from users table (cascades to season_rewards and point_activity)
             db.run(
                 `DELETE FROM users WHERE xUsername = ?`,
                 [username],
@@ -299,7 +292,16 @@ app.post('/api/delete-account', (req, res) => {
                             return res.status(500).json({ error: 'Error signing out after deletion' });
                         }
                         console.log(`Deleted user ${username} from the system`);
-                        res.status(200).json({ message: 'Account deleted successfully' });
+                        db.run(
+                            `INSERT INTO audit_log (action, xUsername, timestamp) VALUES (?, ?, ?)`,
+                            ['delete_account', username, new Date().toISOString()],
+                            (err) => {
+                                if (err) {
+                                    console.error('Error logging deletion:', err);
+                                }
+                                res.status(200).json({ message: 'Account deleted successfully' });
+                            }
+                        );
                     });
                 }
             );
@@ -440,6 +442,20 @@ app.get('/api/season-winners', (req, res) => {
     );
 });
 
+app.get('/api/recent-activity', (req, res) => {
+    db.all(
+        `SELECT xUsername, points, timestamp FROM point_activity ORDER BY timestamp DESC LIMIT 5`,
+        [],
+        (err, rows) => {
+            if (err) {
+                console.error('Error fetching recent activity:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            res.json(rows);
+        }
+    );
+});
+
 app.post('/api/admin/verify-password', (req, res) => {
     const { adminPassword } = req.body;
 
@@ -571,7 +587,7 @@ app.post('/api/admin/delete-user', (req, res) => {
     }
 
     db.get(
-        `SELECT xUsername FROM users WHERE xUsername = ?`,
+        `SELECT xUsername, profilePhoto FROM users WHERE xUsername = ?`,
         [xUsername],
         (err, row) => {
             if (err) {
@@ -582,6 +598,17 @@ app.post('/api/admin/delete-user', (req, res) => {
                 return res.status(404).json({ error: `User ${xUsername} not found` });
             }
 
+            // Delete profile photo if exists
+            if (row.profilePhoto) {
+                const photoPath = path.join(__dirname, '../', row.profilePhoto);
+                fs.unlink(photoPath, (err) => {
+                    if (err && err.code !== 'ENOENT') {
+                        console.error(`Error deleting profile photo for ${xUsername}:`, err);
+                    }
+                });
+            }
+
+            // Delete user from users table (cascades to season_rewards and point_activity)
             db.run(
                 `DELETE FROM users WHERE xUsername = ?`,
                 [xUsername],
@@ -590,8 +617,19 @@ app.post('/api/admin/delete-user', (req, res) => {
                         console.error('Error deleting user:', err);
                         return res.status(500).json({ error: 'Database error' });
                     }
-                    console.log(`Deleted user ${xUsername} from the leaderboard`);
-                    res.status(200).json({ message: `Successfully deleted user ${xUsername}` });
+
+                    // Log deletion in audit_log
+                    db.run(
+                        `INSERT INTO audit_log (action, xUsername, timestamp) VALUES (?, ?, ?)`,
+                        ['admin_delete_user', xUsername, new Date().toISOString()],
+                        (err) => {
+                            if (err) {
+                                console.error('Error logging deletion:', err);
+                            }
+                            console.log(`Deleted user ${xUsername} by admin`);
+                            res.status(200).json({ message: `Successfully deleted user ${xUsername}` });
+                        }
+                    );
                 }
             );
         }
@@ -627,7 +665,16 @@ app.post('/api/admin/clear-leaderboard', (req, res) => {
                         return res.status(500).json({ error: 'Database error' });
                     }
                     console.log('Users after clearing:', remainingRows);
-                    res.status(200).json({ message: 'Successfully cleared invalid users from the leaderboard' });
+                    db.run(
+                        `INSERT INTO audit_log (action, xUsername, timestamp) VALUES (?, ?, ?)`,
+                        ['clear_invalid_users', 'admin', new Date().toISOString()],
+                        (err) => {
+                            if (err) {
+                                console.error('Error logging clear leaderboard:', err);
+                            }
+                            res.status(200).json({ message: 'Successfully cleared invalid users from the leaderboard' });
+                        }
+                    );
                 });
             }
         );
@@ -704,10 +751,27 @@ app.post('/api/admin/reset-leaderboard', (req, res) => {
                                     }
                                     console.log('Started new season with timestamp:', newSeasonStart);
 
-                                    Object.keys(lastChecked).forEach(key => delete lastChecked[key]);
-                                    console.log('Cleared lastChecked timestamps for new season');
-
-                                    res.status(200).json({ message: 'Successfully reset the leaderboard and started a new season' });
+                                    db.run(
+                                        `DELETE FROM point_activity`,
+                                        (err) => {
+                                            if (err) {
+                                                console.error('Error clearing point_activity:', err);
+                                                return res.status(500).json({ error: 'Database error' });
+                                            }
+                                            Object.keys(lastChecked).forEach(key => delete lastChecked[key]);
+                                            console.log('Cleared lastChecked timestamps and point_activity for new season');
+                                            db.run(
+                                                `INSERT INTO audit_log (action, xUsername, timestamp) VALUES (?, ?, ?)`,
+                                                ['reset_leaderboard', 'admin', new Date().toISOString()],
+                                                (err) => {
+                                                    if (err) {
+                                                        console.error('Error logging reset:', err);
+                                                    }
+                                                    res.status(200).json({ message: 'Successfully reset the leaderboard and started a new season' });
+                                                }
+                                            );
+                                        }
+                                    );
                                 }
                             );
                         }
@@ -783,8 +847,20 @@ async function trackLazyLegendsPosts() {
                                     `UPDATE users SET sloMoPoints = sloMoPoints + ? WHERE xUsername = ?`,
                                     [pointsToAdd, row.xUsername],
                                     (err) => {
-                                        if (err) console.error(err);
+                                        if (err) {
+                                            console.error(`Error updating points for ${row.xUsername}:`, err);
+                                            return;
+                                        }
                                         console.log(`${row.xUsername} earned ${pointsToAdd} SloMo Points (multiplier: ${multiplier})`);
+                                        db.run(
+                                            `INSERT INTO point_activity (xUsername, points, timestamp) VALUES (?, ?, ?)`,
+                                            [row.xUsername, pointsToAdd, new Date().toISOString()],
+                                            (err) => {
+                                                if (err) {
+                                                    console.error(`Error logging activity for ${row.xUsername}:`, err);
+                                                }
+                                            }
+                                        );
                                     }
                                 );
                             } else {
