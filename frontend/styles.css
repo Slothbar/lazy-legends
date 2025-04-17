@@ -1,10 +1,43 @@
+/* CSS Variables for Light and Dark Modes */
+:root {
+    --background: #E9ECEF;
+    --card-bg: #F8F9FA;
+    --text: #1A3C34;
+    --primary: #6B9080;
+    --primary-dark: #5A7B6C;
+    --accent: #FF6F61;
+    --accent-dark: #E55A50;
+    --announcement-bg: #4ECDC4;
+    --announcement-text: #1A3C34;
+    --border: #E9ECEF;
+    --input-bg: #fff;
+    --table-header-bg: linear-gradient(to right, #6B9080, #5A7B6C);
+    --table-text: #fff;
+}
+
+.dark-mode {
+    --background: #1A3C34;
+    --card-bg: #2A4B44;
+    --text: #E9ECEF;
+    --primary: #A4C3B2;
+    --primary-dark: #8BA89A;
+    --accent: #FF8A75;
+    --accent-dark: #F47066;
+    --announcement-bg: #45B7AA;
+    --announcement-text: #E9ECEF;
+    --border: #3B6B5F;
+    --input-bg: #3B6B5F;
+    --table-header-bg: linear-gradient(to right, #A4C3B2, #8BA89A);
+    --table-text: #E9ECEF;
+}
+
 /* General Styles */
 body {
     font-family: 'Inter', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #E9ECEF;
-    color: #1A3C34;
+    background: var(--background);
+    color: var(--text);
     line-height: 1.6;
 }
 
@@ -16,7 +49,7 @@ body {
 
 /* Card Styling */
 .card {
-    background: #F8F9FA;
+    background: var(--card-bg);
     border-radius: 12px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     padding: 1.5rem;
@@ -49,7 +82,7 @@ body {
 .hamburger-icon span {
     width: 100%;
     height: 3px;
-    background: #6B9080;
+    background: var(--primary);
     border-radius: 2px;
     transition: all 0.3s ease;
 }
@@ -69,7 +102,7 @@ body {
 .menu-content {
     display: none;
     position: absolute;
-    background: #F8F9FA;
+    background: var(--card-bg);
     min-width: 160px;
     box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     z-index: 1;
@@ -78,7 +111,7 @@ body {
 }
 
 .menu-content a {
-    color: #1A3C34;
+    color: var(--text);
     padding: 0.75rem 1rem;
     text-decoration: none;
     display: block;
@@ -86,11 +119,60 @@ body {
 }
 
 .menu-content a:hover {
-    background: #E9ECEF;
+    background: var(--border);
 }
 
 .hamburger-menu.active .menu-content {
     display: block;
+}
+
+/* Dark Mode Toggle */
+#dark-mode-toggle {
+    background: none;
+    border: none;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+#dark-mode-toggle:hover {
+    background: var(--border);
+}
+
+.toggle-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 0.5rem;
+    position: relative;
+}
+
+.toggle-icon::before {
+    content: '☀️';
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.dark-mode .toggle-icon::before {
+    content: '🌙';
+    opacity: 0;
+    transform: rotate(90deg);
+}
+
+.dark-mode .toggle-icon::after {
+    content: '🌙';
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 1;
+    transform: rotate(0);
 }
 
 /* Advertisement Container */
@@ -106,7 +188,7 @@ body {
 header.card {
     text-align: center;
     padding: 2rem;
-    background: linear-gradient(to right, #A4C3B2, #6B9080);
+    background: linear-gradient(to right, #A4C3B2, var(--primary));
 }
 
 header:hover {
@@ -139,7 +221,7 @@ header p {
 
 /* Announcement Bar */
 .announcement-bar {
-    background: #4ECDC4;
+    background: var(--announcement-bg);
     padding: 0.75rem;
     text-align: center;
     border-radius: 8px;
@@ -151,11 +233,12 @@ header p {
 }
 
 .announcement-bar:hover {
-    background: #45B7AA;
+    background: var(--announcement-bg);
+    filter: brightness(1.1);
 }
 
 .announcement-text {
-    color: #1A3C34;
+    color: var(--announcement-text);
     font-size: clamp(0.9rem, 2vw, 1rem);
     margin: 0;
 }
@@ -165,7 +248,7 @@ h2 {
     font-family: 'Poppins', sans-serif;
     font-size: clamp(1.5rem, 4vw, 1.8rem);
     font-weight: 700;
-    color: #6B9080;
+    color: var(--primary);
     margin-bottom: 1.25rem;
     text-align: center;
     letter-spacing: 0.02em;
@@ -175,14 +258,14 @@ h3 {
     font-family: 'Poppins', sans-serif;
     font-size: clamp(1rem, 3vw, 1.25rem);
     font-weight: 500;
-    color: #1A3C34;
+    color: var(--text);
     margin-bottom: 1rem;
 }
 
 /* How to Play Section */
 #how-to-play-section.card p {
     font-size: clamp(0.9rem, 2vw, 1rem);
-    color: #1A3C34;
+    color: var(--text);
     margin-bottom: 1rem;
     text-align: center;
 }
@@ -205,7 +288,7 @@ h3 {
 
 #season-winners p {
     font-size: clamp(0.9rem, 2vw, 1rem);
-    color: #1A3C34;
+    color: var(--text);
     margin: 0.3rem 0;
     text-align: center;
 }
@@ -213,31 +296,31 @@ h3 {
 table {
     width: 100%;
     border-collapse: collapse;
-    background-color: #F8F9FA;
+    background: var(--card-bg);
     margin-top: 1rem;
 }
 
 th, td {
     padding: 0.75rem;
     text-align: left;
-    border-bottom: 1px solid #E9ECEF;
+    border-bottom: 1px solid var(--border);
 }
 
 th {
-    background: linear-gradient(to right, #6B9080, #5A7B6C);
-    color: #fff;
+    background: var(--table-header-bg);
+    color: var(--table-text);
     font-weight: 600;
 }
 
 td {
-    color: #1A3C34;
+    color: var(--text);
 }
 
 /* Footer */
 footer.card {
     text-align: center;
     padding: 1.5rem;
-    background: linear-gradient(to bottom, #F8F9FA, #E9ECEF);
+    background: linear-gradient(to bottom, var(--card-bg), var(--border));
     position: sticky;
     bottom: 0;
     border-radius: 0 0 10px 10px;
@@ -252,311 +335,11 @@ footer img.footer-logo {
 
 footer p {
     font-size: clamp(0.8rem, 2vw, 0.9rem);
-    color: #1A3C34;
+    color: var(--text);
     margin: 0.5rem 0;
 }
 
 .social-links {
     display: flex;
     justify-content: center;
-    gap: 1rem;
-    margin-top: 0.5rem;
-}
-
-.social-icon {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    background: #6B9080;
-    border-radius: 50%;
-}
-
-.x-icon::before {
-    content: 'X';
-    color: #fff;
-    font-size: 0.8rem;
-    line-height: 20px;
-    text-align: center;
-    display: block;
-}
-
-.hedera-icon::before {
-    content: 'H';
-    color: #fff;
-    font-size: 0.8rem;
-    line-height: 20px;
-    text-align: center;
-    display: block;
-}
-
-.social-links a:hover .social-icon {
-    background: #FF6F61;
-}
-
-/* Auth Section */
-#auth-section.card {
-    max-width: 100%;
-}
-
-#auth-toggle {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 1.25rem;
-}
-
-#auth-toggle button {
-    background: linear-gradient(to bottom, #6B9080, #5A7B6C);
-    color: #fff;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    min-height: 44px;
-    transition: all 0.3s ease;
-}
-
-#auth-toggle button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-#auth-toggle button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-#signup-form-container h2,
-#signin-form-container h2 {
-    text-align: center;
-    color: #6B9080;
-}
-
-#signup-form,
-#signin-form {
-    background-color: transparent;
-    padding: 0;
-    box-shadow: none;
-}
-
-#signup-form label,
-#signin-form label {
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    color: #1A3C34;
-    display: block;
-    margin-bottom: 0.5rem;
-}
-
-#signup-form input[type="text"],
-#signup-form input[type="password"],
-#signin-form input[type="text"],
-#signin-form input[type="password"] {
-    padding: 0.75rem;
-    border: 1px solid #E9ECEF;
-    border-radius: 8px;
-    background-color: #fff;
-    color: #1A3C34;
-    width: 100%;
-    box-sizing: border-box;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    min-height: 48px;
-    transition: all 0.3s ease;
-}
-
-#signup-form input:focus,
-#signin-form input:focus {
-    border-color: #6B9080;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    outline: 2px solid #6B9080;
-    outline-offset: 2px;
-}
-
-.primary-btn {
-    background: linear-gradient(to bottom, #6B9080, #5A7B6C);
-    color: #fff;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    width: 100%;
-    min-height: 44px;
-    transition: all 0.3s ease;
-}
-
-.primary-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.primary-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-.primary-btn.highlight {
-    background: linear-gradient(to bottom, #FF6F61, #E55A50);
-}
-
-.primary-btn.highlight:hover {
-    background: linear-gradient(to bottom, #FF8A75, #F47066);
-}
-
-.destructive-btn {
-    background: linear-gradient(to bottom, #FF6F61, #E55A50);
-    color: #fff;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    min-height: 44px;
-    transition: all 0.3s ease;
-}
-
-.destructive-btn:hover {
-    transform: scale(1.05);
-    background: linear-gradient(to bottom, #FF8A75, #F47066);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-#signup-feedback,
-#signin-feedback,
-#upload-feedback {
-    margin-top: 0.6rem;
-    text-align: center;
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
-}
-
-/* Next Steps Section */
-#next-steps-section.card p {
-    color: #1A3C34;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-}
-
-/* Profile Section */
-#profile-section.card p {
-    color: #1A3C34;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-}
-
-#profile-photo-container {
-    margin-top: 1.25rem;
-}
-
-#profile-photo.profile-image {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-#profile-photo.profile-image:hover {
-    transform: scale(1.02);
-}
-
-#profile-section input[type="file"] {
-    background-color: #fff;
-    color: #1A3C34;
-    border: 1px solid #E9ECEF;
-    padding: 0.5rem;
-    border-radius: 8px;
-}
-
-/* Admin Panel Section */
-#admin-panel.card p {
-    color: #1A3C34;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-}
-
-#admin-panel input[type="password"],
-#admin-panel textarea {
-    background-color: #fff;
-    color: #1A3C34;
-    border: 1px solid #E9ECEF;
-    padding: 0.75rem;
-    border-radius: 8px;
-    width: 100%;
-    box-sizing: border-box;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    min-height: 48px;
-}
-
-#admin-panel input:focus,
-#admin-panel textarea:focus {
-    border-color: #6B9080;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    outline: 2px solid #6B9080;
-    outline-offset: 2px;
-}
-
-/* Thumbnail Styling */
-.profile-thumbnail {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    vertical-align: middle;
-    margin-right: 0.6rem;
-    object-fit: cover;
-}
-
-/* Advertisement Images */
-.ad-image {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    object-fit: cover;
-}
-
-/* Responsive Design (Mobile-First) */
-#auth-section.card,
-#profile-section.card,
-#admin-panel.card {
-    max-width: 100%;
-}
-
-@media screen and (min-width: 768px) {
-    .container {
-        max-width: 960px;
-        padding: 2rem;
-    }
-
-    .card {
-        padding: 2rem;
-    }
-
-    header.card {
-        padding: 2.5rem;
-    }
-
-    header img.header-image {
-        width: 100px;
-        height: 100px;
-    }
-
-    #auth-toggle {
-        flex-direction: row;
-    }
-
-    #how-to-play-section img.section-image {
-        max-width: 200px;
-    }
-
-    .ad-container {
-        flex-direction: row;
-    }
-
-    .ad-image {
-        max-width: 300px;
-    }
-}
-
-@media screen and (min-width: 1200px) {
-    .container {
-        max-width: 1200px;
-    }
-}
+    gap:
