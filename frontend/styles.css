@@ -13,9 +13,10 @@
     --input-bg: #fff;
     --table-header-bg: linear-gradient(to right, #6B9080, #5A7B6C);
     --table-text: #fff;
-    --background-image: url('https://images.unsplash.com/photo-1501426026826-31c667bdf23d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80'); /* Placeholder jungle leaf image */
+    --background-image: url('https://your-hosted-image.com/jungle-leaf-pattern.png'); /* Replace with your Imgur-hosted PNG from Freepik: https://www.freepik.com/free-vector/hand-drawn-tropical-leaves-background_14027682.htm */
 }
 
+/* Attribution: Jungle leaf pattern by Freepik (https://www.freepik.com/free-vector/hand-drawn-tropical-leaves-background_14027682.htm) */
 .dark-mode {
     --background: #1A3C34;
     --card-bg: #2A4B44;
@@ -30,7 +31,7 @@
     --input-bg: #3B6B5F;
     --table-header-bg: linear-gradient(to right, #A4C3B2, #8BA89A);
     --table-text: #E9ECEF;
-    --background-image: url('https://images.unsplash.com/photo-1501426026826-31c667bdf23d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80&brightness=0.5'); /* Darker jungle leaf for dark mode */
+    --background-image: url('https://your-hosted-image.com/jungle-leaf-pattern.png'); /* Same PNG, adjusted opacity for dark mode */
 }
 
 /* General Styles */
@@ -39,10 +40,27 @@ body {
     margin: 0;
     padding: 0;
     background: var(--background) var(--background-image) repeat center center;
-    background-size: cover;
+    background-size: 300px;
     background-attachment: fixed;
     color: var(--text);
     line-height: 1.6;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--background-image) repeat center center;
+    background-size: 300px;
+    opacity: 0.5; /* Transparency for light mode */
+    z-index: -1;
+}
+
+.dark-mode::before {
+    opacity: 0.6; /* Slightly higher opacity for dark mode */
 }
 
 .container {
@@ -712,6 +730,16 @@ footer p {
 
     #timer-text {
         font-size: clamp(1rem, 2.5vw, 1.2rem);
+    }
+
+    body, body::before {
+        background-size: 300px;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    body, body::before {
+        background-size: 200px; /* Smaller pattern for mobile */
     }
 }
 
