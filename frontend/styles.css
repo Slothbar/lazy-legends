@@ -3,53 +3,53 @@ body {
     font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #E3ECD8; /* Light green background for the site */
-    color: #333; /* Dark text for contrast */
+    background-color: #E3ECD8;
+    color: #333;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 90vw;
     margin: 0 auto;
-    padding: 20px;
-    background-color: #fff; /* White background for the main content box */
+    padding: 2rem;
+    background-color: #fff;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 /* Hamburger Menu */
 .hamburger-menu {
-    position: absolute;
-    top: 20px;
-    left: 20px;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
     z-index: 1000;
 }
 
 .hamburger-icon {
     cursor: pointer;
-    font-size: 24px;
+    font-size: 1.5rem;
     color: #333;
 }
 
 .menu-content {
     display: none;
     position: absolute;
-    background: #fff; /* White background */
+    background: #fff;
     min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     z-index: 1;
     border-radius: 5px;
 }
 
 .menu-content a {
     color: #333;
-    padding: 12px 16px;
+    padding: 0.75rem 1rem;
     text-decoration: none;
     display: block;
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 .menu-content a:hover {
-    background-color: #f0f0f0; /* Light gray for hover */
+    background-color: #f5f5f5;
 }
 
 .hamburger-menu.active .menu-content {
@@ -59,120 +59,115 @@ body {
 /* Header */
 header {
     text-align: center;
-    padding: 40px 0;
-    background: linear-gradient(to right, #A1CFB3, #6FA17C); /* Lighter green to darker green gradient */
+    padding: 2.5rem 0;
+    background: linear-gradient(to right, #A1CFB3, #6FA17C);
     border-radius: 10px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease;
 }
 
-header img {
-    width: 100px;
-    height: 100px;
-    margin-bottom: 20px;
+header:hover {
+    transform: translateY(-2px);
+}
+
+header img.header-image {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1rem;
 }
 
 header h1 {
-    font-size: 48px;
+    font-size: 2.5rem;
     font-weight: 700;
     margin: 0;
-    color: #fff; /* White text */
+    color: #fff;
 }
 
 header p {
-    font-size: 18px;
-    color: #fff; /* White text */
-    margin: 10px 0 0;
+    font-size: 1rem;
+    color: #fff;
+    margin: 0.5rem 0 0;
 }
 
 /* Announcement Bar */
 .announcement-bar {
-    background: #DAA520; /* Gold background */
-    padding: 10px;
+    background: #DAA520;
+    padding: 0.75rem;
     text-align: center;
     border-radius: 5px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: background 0.3s ease;
+}
+
+.announcement-bar:hover {
+    background: #e6b800;
 }
 
 .announcement-text {
-    color: #fff; /* White text to match the gold background */
-    font-size: 16px;
+    color: #fff;
+    font-size: 1rem;
     margin: 0;
 }
 
 /* Section Headings */
 h2 {
-    font-size: 28px;
+    font-size: 1.75rem;
     font-weight: 600;
     color: #4a7c59;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
     text-align: center;
 }
 
 h3 {
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 500;
     color: #333;
-    margin-bottom: 15px;
+    margin-bottom: 1rem;
 }
 
 /* How to Play Section */
 #how-to-play-section {
-    margin-bottom: 40px;
-    background: #fff; /* White background */
-    padding: 20px;
+    margin-bottom: 2.5rem;
+    background: #fff;
+    padding: 1.5rem;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 #how-to-play-section p {
-    font-size: 16px;
+    font-size: 1rem;
     color: #333;
-    margin-bottom: 20px;
+    margin-bottom: 1rem;
 }
 
-#how-to-play-section ol {
-    padding-left: 20px;
-}
-
-#how-to-play-section li {
-    font-size: 16px;
-    color: #333;
-    margin-bottom: 15px;
-    line-height: 1.5;
-}
-
-#how-to-play-section li strong {
-    color: #4a7c59;
-}
-
-#how-to-play-section img {
+#how-to-play-section img.section-image {
     display: block;
-    margin: 10px auto;
-    max-width: 200px;
+    margin: 0.5rem auto;
+    max-width: 150px;
     height: auto;
 }
 
 #how-to-play-section center p {
-    font-size: 16px;
+    font-size: 1rem;
     color: #333;
 }
 
 /* Leaderboard and Season Rewards Sections */
 #leaderboard-section,
 #season-rewards-section {
-    margin-bottom: 40px;
-    background: #fff; /* White background */
-    padding: 20px;
+    margin-bottom: 2.5rem;
+    background: #fff;
+    padding: 1.5rem;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 #season-winners p {
-    font-size: 16px;
+    font-size: 1rem;
     color: #333;
-    margin: 5px 0;
+    margin: 0.3rem 0;
     text-align: center;
 }
 
@@ -180,17 +175,17 @@ table {
     width: 100%;
     border-collapse: collapse;
     background-color: #fff;
-    margin-top: 20px;
+    margin-top: 1rem;
 }
 
 th, td {
-    padding: 12px 15px;
+    padding: 0.75rem;
     text-align: left;
     border-bottom: 1px solid #ddd;
 }
 
 th {
-    background: linear-gradient(to right, #4a7c59, #3a6347); /* Green gradient */
+    background: linear-gradient(to right, #4a7c59, #3a6347);
     color: white;
     font-weight: 600;
 }
@@ -202,37 +197,40 @@ td {
 /* Footer */
 footer {
     text-align: center;
-    padding: 20px 0;
-    background: #fff; /* White background */
+    padding: 1.5rem 0;
+    background: #fff;
     color: #666;
-    font-size: 14px;
-    box-shadow: 0 -4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
+    font-size: 0.9rem;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
 }
 
-/* Original styles for sign-up and sign-in forms (pre-beautification) */
+/* Auth Section */
 #auth-section {
-    max-width: 500px;
-    margin: 0 auto 40px;
-    background: #fff; /* White background */
-    padding: 20px;
+    max-width: 100%;
+    margin: 0 auto 2.5rem;
+    background: #fff;
+    padding: 1.5rem;
     border-radius: 5px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 #auth-toggle {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 #auth-toggle button {
-    margin: 0 10px;
     background-color: #666;
     color: white;
-    padding: 10px 20px;
+    padding: 0.6rem 1.25rem;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
 }
 
 #auth-toggle button:hover {
@@ -243,8 +241,8 @@ footer {
 #signin-form-container h2 {
     text-align: center;
     color: #4a7c59;
-    margin-bottom: 20px;
-    font-size: 1.5em;
+    margin-bottom: 1.25rem;
+    font-size: 1.5rem;
 }
 
 #signup-form,
@@ -256,33 +254,38 @@ footer {
 
 #signup-form label,
 #signin-form label {
-    font-size: 1em;
+    font-size: 1rem;
     color: #333;
+    display: block;
+    margin-bottom: 0.5rem;
 }
 
 #signup-form input[type="text"],
 #signup-form input[type="password"],
 #signin-form input[type="text"],
 #signin-form input[type="password"] {
-    padding: 8px;
+    padding: 0.6rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     background-color: #f0f0f0;
     color: #333;
     width: 100%;
     box-sizing: border-box;
+    font-size: 1rem;
+    min-height: 2.5rem;
 }
 
 #signup-form button,
 #signin-form button {
     width: 100%;
-    padding: 10px;
-    font-size: 1.1em;
+    padding: 0.75rem;
+    font-size: 1rem;
     background-color: #4a7c59;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
 #signup-form button:hover,
@@ -293,40 +296,41 @@ footer {
 #signup-feedback,
 #signin-feedback,
 #upload-feedback {
-    margin-top: 10px;
+    margin-top: 0.6rem;
     text-align: center;
-    font-size: 0.9em;
+    font-size: 0.9rem;
 }
 
 /* Next Steps Section */
 #next-steps-section {
     text-align: center;
-    margin-bottom: 40px;
-    background: #fff; /* White background */
-    padding: 20px;
+    margin-bottom: 2.5rem;
+    background: #fff;
+    padding: 1.5rem;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 #next-steps-section h2 {
     color: #4a7c59;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
 }
 
 #next-steps-section p {
     color: #333;
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 #next-steps-section button {
-    margin-top: 10px;
+    margin: 0.6rem;
     background-color: #4a7c59;
     color: white;
-    padding: 10px 20px;
+    padding: 0.6rem 1.25rem;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
 }
 
 #next-steps-section button:hover {
@@ -335,44 +339,52 @@ footer {
 
 /* Profile Section */
 #profile-section {
-    max-width: 600px;
-    margin: 0 auto;
-    background: #fff; /* White background */
-    padding: 20px;
+    max-width: 100%;
+    margin: 0 auto 2.5rem;
+    background: #fff;
+    padding: 1.5rem;
     border-radius: 10px;
-    margin-bottom: 40px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 #profile-section h2 {
     color: #4a7c59;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
 }
 
 #profile-section p {
     color: #333;
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 #profile-photo-container {
-    margin-top: 20px;
+    margin-top: 1.25rem;
 }
 
 #profile-photo {
     display: block;
-    margin: 10px 0;
+    margin: 0.6rem 0;
+    max-width: 100%;
+    height: auto;
 }
 
 #profile-section input[type="file"] {
     background-color: #f0f0f0;
     color: #333;
     border: 1px solid #ddd;
+    padding: 0.5rem;
 }
 
 #signout-btn,
 #delete-account-btn {
     background-color: #d9534f;
-    margin-top: 10px;
+    margin: 0.6rem 0;
+    padding: 0.6rem 1.25rem;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
 }
 
 #signout-btn:hover,
@@ -381,13 +393,14 @@ footer {
 }
 
 #back-to-home-from-profile-btn {
-    margin-top: 10px;
+    margin: 0.6rem 0;
     background-color: #4a7c59;
     color: white;
-    padding: 10px 20px;
+    padding: 0.6rem 1.25rem;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 1rem;
 }
 
 #back-to-home-from-profile-btn:hover {
@@ -396,24 +409,23 @@ footer {
 
 /* Admin Panel Section */
 #admin-panel {
-    max-width: 600px;
-    margin: 0 auto;
-    background: #fff; /* White background */
-    padding: 20px;
+    max-width: 100%;
+    margin: 0 auto 2.5rem;
+    background: #fff;
+    padding: 1.5rem;
     border-radius: 10px;
-    margin-bottom: 40px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Shadow for 3D pop effect */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 #admin-panel h2,
 #admin-panel h3 {
     color: #4a7c59;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
 }
 
 #admin-panel p {
     color: #333;
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 #admin-panel input[type="password"],
@@ -421,31 +433,154 @@ footer {
     background-color: #f0f0f0;
     color: #333;
     border: 1px solid #ddd;
-    padding: 8px;
+    padding: 0.6rem;
     border-radius: 4px;
     width: 100%;
     box-sizing: border-box;
+    font-size: 1rem;
 }
 
 #admin-panel button {
-    margin: 5px 0;
+    margin: 0.3rem 0;
     background-color: #4a7c59;
     color: white;
-    padding: 10px 20px;
+    padding: 0.6rem 1.25rem;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 1rem;
 }
 
 #admin-panel button:hover {
     background-color: #3a6347;
 }
 
-/* Add thumbnail styling for leaderboard */
+/* Thumbnail Styling */
 .profile-thumbnail {
     width: 30px;
     height: 30px;
     border-radius: 50%;
     vertical-align: middle;
-    margin-right: 10px;
+    margin-right: 0.6rem;
+}
+
+/* Advertisement Images */
+.ad-image {
+    max-width: 100%;
+    height: auto;
+    margin: 0.5rem 0;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    header {
+        padding: 1.5rem 0;
+    }
+
+    header h1 {
+        font-size: 2rem;
+    }
+
+    header p {
+        font-size: 0.9rem;
+    }
+
+    header img.header-image {
+        width: 60px;
+        height: 60px;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+    }
+
+    #auth-toggle {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    #auth-toggle button {
+        width: 100%;
+        padding: 0.5rem;
+    }
+
+    #signup-form input[type="text"],
+    #signup-form input[type="password"],
+    #signin-form input[type="text"],
+    #signin-form input[type="password"] {
+        font-size: 0.9rem;
+    }
+
+    #how-to-play-section img.section-image {
+        max-width: 120px;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .hamburger-menu {
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+
+    .hamburger-icon {
+        font-size: 1.2rem;
+    }
+
+    .menu-content {
+        min-width: 140px;
+    }
+
+    .menu-content a {
+        font-size: 0.9rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    header h1 {
+        font-size: 1.5rem;
+    }
+
+    header p {
+        font-size: 0.8rem;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    h3 {
+        font-size: 1rem;
+    }
+
+    #how-to-play-section p,
+    #next-steps-section p,
+    #profile-section p,
+    #admin-panel p {
+        font-size: 0.9rem;
+    }
+
+    #how-to-play-section img.section-image {
+        max-width: 100px;
+    }
+
+    button {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+
+    input, textarea {
+        font-size: 0.9rem;
+    }
 }
