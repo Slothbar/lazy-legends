@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lazy Legends - Slothbar Memecoin Game</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -17,25 +16,27 @@
         <!-- Hamburger Menu -->
         <div class="hamburger-menu">
             <div class="hamburger-icon">
-                <i class="fas fa-bars"></i>
+                <span></span>
+                <span></span>
+                <span></span>
             </div>
             <div class="menu-content">
                 <a href="#" id="admin-link">Admin Panel</a>
             </div>
         </div>
-        <center>
+        <div class="ad-container">
             <a href="https://imgbb.com/"><img src="https://i.ibb.co/x86vDfx4/Advertise-Your-Project-Here-200-x-200-px.jpg" alt="Advertise-Your-Project-Here-200-x-200-px" border="0" class="ad-image"></a>
             <a href="https://ibb.co/39Vzc7Rg"><img src="https://i.ibb.co/Q3hdMfDy/Untitled-1120-x-630-px-1120-x-500-px-750-x-450-px-800-x-300-px.jpg" alt="Untitled-1120-x-630-px-1120-x-500-px-750-x-450-px-800-x-300-px" border="0" class="ad-image"></a>
             <a href="https://imgbb.com/"><img src="https://i.ibb.co/x86vDfx4/Advertise-Your-Project-Here-200-x-200-px.jpg" alt="Advertise-Your-Project-Here-200-x-200-px" border="0" class="ad-image"></a>
-        </center>
-        <header>
+        </div>
+        <header class="card">
             <a href="https://imgbb.com/"><img src="https://i.ibb.co/8g08DCjc/Copy-of-Copy-of-Untitled-200-x-200-px-350-x-350-px-200-x-200-px.png" alt="Copy-of-Copy-of-Untitled-200-x-200-px-350-x-350-px-200-x-200-px" border="0" class="header-image"></a>
             <h1>Lazy Legends</h1>
             <p><strong>A Chill2Earn game by Slothbar. Powered by Hedera.</strong></p>
             <p>Chill, Post, Earn $SLOTH with #LazyLegends</p>
         </header>
 
-        <section id="auth-section">
+        <section id="auth-section" class="card">
             <div id="auth-toggle">
                 <button id="show-signup-btn">Sign Up</button>
                 <button id="show-signin-btn">Sign In</button>
@@ -50,7 +51,7 @@
                     <input type="password" id="signup-password" name="password" placeholder="At least 8 characters" required>
                     <label for="signup-hedera-wallet">Hedera Wallet Address (Optional): 5 Bonus SloMo Points For Linking</label>
                     <input type="text" id="signup-hedera-wallet" name="hedera-wallet" placeholder="0.0.12345">
-                    <button type="submit">Sign Up</button>
+                    <button type="submit" class="primary-btn">Sign Up</button>
                 </form>
                 <p id="signup-feedback" style="display: none;"></p>
             </div>
@@ -62,73 +63,71 @@
                     <input type="text" id="signin-x-username" name="x-username" placeholder="@slothhbar" required>
                     <label for="signin-password">Password:</label>
                     <input type="password" id="signin-password" name="password" required>
-                    <button type="submit">Sign In</button>
+                    <button type="submit" class="primary-btn">Sign In</button>
                 </form>
                 <p id="signin-feedback" style="display: none;"></p>
             </div>
         </section>
 
-        <section id="next-steps-section" style="display: none;">
+        <section id="next-steps-section" style="display: none;" class="card">
             <h2>Next Steps</h2>
             <p>Start posting on X with the hashtag #LazyLegends to earn SloMo Points and climb the leaderboard!</p>
-            <button id="tweet-now-btn">Tweet Now</button>
-            <button id="view-profile-btn">View Profile</button>
+            <button id="tweet-now-btn" class="primary-btn highlight">Tweet Now</button>
+            <button id="view-profile-btn" class="primary-btn">View Profile</button>
         </section>
 
-        <section id="profile-section" style="display: none;">
+        <section id="profile-section" style="display: none;" class="card">
             <h2>Your Profile</h2>
             <p><strong>X Username:</strong> <span id="profile-x-username"></span></p>
             <p><strong>Hedera Wallet:</strong> <span id="profile-hedera-wallet"></span></p>
             <p><strong>SloMo Points:</strong> <span id="profile-slo-mo-points"></span></p>
             <div id="profile-photo-container">
                 <h3>Profile Photo</h3>
-                <img id="profile-photo" src="" alt="Profile Photo" style="display: none; max-width: 200px;">
+                <img id="profile-photo" src="" alt="Profile Photo" style="display: none;" class="profile-image">
                 <form id="upload-photo-form">
                     <input type="file" id="profile-photo-input" name="photo" accept="image/*">
-                    <button type="submit">Upload Photo</button>
+                    <button type="submit" class="primary-btn">Upload Photo</button>
                 </form>
                 <p id="upload-feedback" style="display: none;"></p>
             </div>
-            <button id="signout-btn">Sign Out</button>
-            <button id="delete-account-btn">Delete Account</button>
-            <button id="back-to-home-from-profile-btn">Back to Home</button>
+            <button id="signout-btn" class="destructive-btn">Sign Out</button>
+            <button id="delete-account-btn" class="destructive-btn">Delete Account</button>
+            <button id="back-to-home-from-profile-btn" class="primary-btn">Back to Home</button>
         </section>
 
-        <section id="how-to-play-section">
-            <center><h2>How to Play Lazy Legends</h2></center>
+        <section id="how-to-play-section" class="card">
+            <h2>How to Play Lazy Legends</h2>
             <p>Join the Chill2Earn fun and earn $SLOTH—here’s how:</p>
-            <center><p><strong>Start:</strong> Sign up above! Earn 5 bonus SloMo points by linking your Hedera wallet address.</p></center>
-            <center><a href="https://ibb.co/cc0Brj8m"><img src="https://i.ibb.co/cc0Brj8m/Untitled-200-x-200-px-1.png" alt="Untitled-200-x-200-px-1" border="0" class="section-image"></a></center>
-            <center><p><strong>Hold Tight:</strong> Hold $SLOTH tokens or be providing to a liquidity pool in your Hashpack Wallet.</p></center>
-            <center><a href="https://ibb.co/RGBGFrKX"><img src="https://i.ibb.co/RGBGFrKX/Untitled-200-x-200-px.png" alt="Untitled-200-x-200-px" border="0" class="section-image"></a></center>
-            <center><p><strong>Slothify:</strong> Find chill X posts and reply with a fun message or meme. <b>Make sure you include the tag #LazyLegends in your post. You earn 2 SloMo Points per post.</b></p></center>
-            <center><a href="https://ibb.co/0ymLz0Db"><img src="https://i.ibb.co/0ymLz0Db/Untitled-200-x-200-px-2.png" alt="Untitled-200-x-200-px-2" border="0" class="section-image"></a></center>
-            <center><p><strong>Win:</strong> Top three players in each season get $SLOTH tokens dropped to their wallets.</p></center>
-            <center><a href="https://ibb.co/TBTqdL8B"><img src="https://i.ibb.co/TBTqdL8B/Untitled-200-x-200-px-3.png" alt="Untitled-200-x-200-px-3" border="0" class="section-image"></a></center>
-            <center><p><strong>Spread sloth vibes and climb the ranks!</strong></p></center>
+            <p><strong>Start:</strong> Sign up above! Earn 5 bonus SloMo points by linking your Hedera wallet address.</p>
+            <a href="https://ibb.co/cc0Brj8m"><img src="https://i.ibb.co/cc0Brj8m/Untitled-200-x-200-px-1.png" alt="Untitled-200-x-200-px-1" border="0" class="section-image" loading="lazy"></a>
+            <p><strong>Hold Tight:</strong> Hold $SLOTH tokens or be providing to a liquidity pool in your Hashpack Wallet.</p>
+            <a href="https://ibb.co/RGBGFrKX"><img src="https://i.ibb.co/RGBGFrKX/Untitled-200-x-200-px.png" alt="Untitled-200-x-200-px" border="0" class="section-image" loading="lazy"></a>
+            <p><strong>Slothify:</strong> Find chill X posts and reply with a fun message or meme. <b>Make sure you include the tag #LazyLegends in your post. You earn 2 SloMo Points per post.</b></p>
+            <a href="https://ibb.co/0ymLz0Db"><img src="https://i.ibb.co/0ymLz0Db/Untitled-200-x-200-px-2.png" alt="Untitled-200-x-200-px-2" border="0" class="section-image" loading="lazy"></a>
+            <p><strong>Win:</strong> Top three players in each season get $SLOTH tokens dropped to their wallets.</p>
+            <a href="https://ibb.co/TBTqdL8B"><img src="https://i.ibb.co/TBTqdL8B/Untitled-200-x-200-px-3.png" alt="Untitled-200-x-200-px-3" border="0" class="section-image" loading="lazy"></a>
+            <p><strong>Spread sloth vibes and climb the ranks!</strong></p>
         </section>
 
-        <!-- Season Rewards Section -->
-        <section id="season-rewards-section">
-            <center><h2>Previous Season Winners 🏆</h2></center>
+        <section id="season-rewards-section" class="card">
+            <h2>Previous Season Winners 🏆</h2>
             <div id="season-winners"></div>
         </section>
 
-        <!-- Admin Panel Section -->
-        <section id="admin-panel" style="display: none;">
+        <section id="admin-panel" style="display: none;" class="card">
             <h2>Admin Panel 🦥</h2>
             <div id="admin-login" style="display: block;">
                 <p>Enter the admin password to access the panel:</p>
                 <input type="password" id="admin-password" placeholder="Admin Password">
-                <button id="admin-login-btn">Login</button>
+                <button id="admin-login-btn" class="primary-btn">Login</button>
             </div>
             <div id="admin-controls" style="display: none;">
                 <p>Admin controls:</p>
-                <button id="clear-invalid-users-btn">Clear Invalid Users</button>
-                <button id="reset-leaderboard-btn">Reset Leaderboard</button>
-                <button id="view-all-users-btn">View All Users</button>
-                <button id="edit-announcement-btn">Edit Announcement</button>
-                <button id="back-to-home-btn">Back to Home</button>
+                <button id="clear-invalid-users-btn" class="primary-btn">Clear Invalid Users</button>
+                <button id="reset-leaderboard-btn" class="primary-btn">Reset Leaderboard</button>
+                <button id="view-all-users-btn" class="primary-btn">View All Users</button>
+                <button id="edit-announcement-btn" class="primary-btn">Edit Announcement</button>
+                <button id="back-to-home-btn" class="primary-btn">Back to Home</button>
             </div>
             <div id="admin-users" style="display: none;">
                 <h3>All Users</h3>
@@ -142,19 +141,18 @@
                     </thead>
                     <tbody id="users-table-body"></tbody>
                 </table>
-                <button id="back-to-controls-btn">Back to Controls</button>
+                <button id="back-to-controls-btn" class="primary-btn">Back to Controls</button>
             </div>
             <div id="admin-announcement" style="display: none;">
                 <h3>Edit Announcement</h3>
                 <textarea id="announcement-input" rows="3" placeholder="Enter the announcement text (e.g., Welcome to Season 2 of Lazy Legends! 🦥)"></textarea>
-                <button id="save-announcement-btn">Save Announcement</button>
-                <button id="back-to-controls-from-announcement-btn">Back to Controls</button>
+                <button id="save-announcement-btn" class="primary-btn">Save Announcement</button>
+                <button id="back-to-controls-from-announcement-btn" class="primary-btn">Back to Controls</button>
             </div>
         </section>
 
-        <!-- Leaderboard Section -->
-        <section id="leaderboard-section">
-            <center><h2>🏆Leaderboard - SloMo Points🏆</h2></center>
+        <section id="leaderboard-section" class="card">
+            <h2>🏆Leaderboard - SloMo Points🏆</h2>
             <table id="leaderboard">
                 <thead>
                     <tr>
@@ -167,8 +165,13 @@
             </table>
         </section>
 
-        <footer>
-            <p>Powered by Slothbar Memecoin & Hedera Hashgraph</p>
+        <footer class="card">
+            <img src="https://i.ibb.co/8g08DCjc/Copy-of-Copy-of-Untitled-200-x-200-px-350-x-350-px-200-x-200-px.png" alt="Slothbar Logo" class="footer-logo">
+            <p>Chill2Earn with Slothbar Memecoin & Hedera Hashgraph</p>
+            <div class="social-links">
+                <a href="https://x.com" aria-label="Follow on X"><i class="social-icon x-icon"></i></a>
+                <a href="https://hedera.com" aria-label="Hedera Network"><i class="social-icon hedera-icon"></i></a>
+            </div>
         </footer>
     </div>
     <script src="script.js"></script>
