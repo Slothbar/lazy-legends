@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load season dates and start timer
     fetchSeasonDates();
 
+    // Load recent activity on page load
+    fetchRecentActivity();
+
     // Handle hamburger menu toggle
     const hamburgerMenu = document.querySelector('.hamburger-menu');
     const hamburgerIcon = document.querySelector('.hamburger-icon');
@@ -101,6 +104,45 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fallback to hardcoded dates
             updateSeasonTimer();
             setInterval(updateSeasonTimer, 1000);
+        }
+    }
+
+    async function fetchRecentActivity() {
+        const activityList = document.getElementById('recent-activity-list');
+        if (!activityList) return;
+
+        // Mock data for CodePen or when API is unavailable
+        const mockData = [
+            { xUsername: '@SlothLad', points: 2, timestamp: new Date().toISOString() },
+            { xUsername: '@ChillSloth', points: 4, timestamp: new Date(Date.now() - 60000).toISOString() },
+            { xUsername: '@LazyKing', points: 2, timestamp: new Date(Date.now() - 120000).toISOString() }
+        ];
+
+        try {
+            const response = await fetch('/api/recent-activity', {
+                credentials: 'include'
+            });
+            let activities = mockData; // Default to mock data
+            if (response.ok) {
+                activities = await response.json();
+            } else {
+                console.error('Error fetching recent activity:', await response.json());
+            }
+
+            activityList.innerHTML = '';
+            activities.slice(0, 5).forEach(activity => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="username">${activity.xUsername}</span> just earned ${activity.points} SloMo points!`;
+                activityList.appendChild(li);
+            });
+        } catch (error) {
+            console.error('Error fetching recent activity:', error);
+            activityList.innerHTML = '';
+            mockData.slice(0, 5).forEach(activity => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="username">${activity.xUsername}</span> just earned ${activity.points} SloMo points!`;
+                activityList.appendChild(li);
+            });
         }
     }
 
