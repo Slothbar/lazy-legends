@@ -231,13 +231,39 @@ body::before {
     transform: rotate(0);
 }
 
-/* Advertisement Container */
-.ad-container {
+/* Sponsor Banner and Ad Spots Containers */
+.sponsor-banner-container {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.ad-spots-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 1rem;
     margin-bottom: 1.5rem;
+}
+
+/* Sponsor Banner and Ad Spot Images */
+.sponsor-banner-image {
+    max-width: 100%;
+    width: 600px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    object-fit: cover;
+}
+
+.ad-spot-image {
+    max-width: 100%;
+    width: 200px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    object-fit: cover;
 }
 
 /* Header */
@@ -681,15 +707,6 @@ footer p {
     object-fit: cover;
 }
 
-/* Advertisement Images */
-.ad-image {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    object-fit: cover;
-}
-
 /* Responsive Design (Mobile-First) */
 #auth-section.card,
 #profile-section.card,
@@ -724,12 +741,17 @@ footer p {
         max-width: 200px;
     }
 
-    .ad-container {
-        flex-direction: row;
+    .sponsor-banner-image {
+        width: 800px;
     }
 
-    .ad-image {
-        max-width: 300px;
+    .ad-spots-container {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .ad-spot-image {
+        width: 200px;
     }
 
     #season-timer {
@@ -748,6 +770,16 @@ footer p {
 @media screen and (max-width: 767px) {
     body, body::before {
         background-size: 200px; /* Smaller pattern for mobile */
+    }
+
+    .sponsor-banner-image {
+        width: 100%;
+        max-width: 600px;
+    }
+
+    .ad-spot-image {
+        width: 100%;
+        max-width: 200px;
     }
 }
 
