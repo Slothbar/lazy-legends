@@ -926,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Sort winners by rank in ascending order (Rank 1 first)
                     data.winners.sort((a, b) => a.rank - b.rank);
                     data.winners.forEach(winner => {
-                        const winnerText = `Rank ${winner.rank}: ${winner.xUsername} - ${winner.rewardAmount} $SLOTH`;
+                        const winnerText = `Rank ${winner.rank}: ${winner.xUsername} - ${winner.sloMoPoints} SloMo Points`;
                         const p = document.createElement('p');
                         p.textContent = winnerText;
                         seasonWinnersDiv.appendChild(p);
