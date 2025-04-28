@@ -433,7 +433,16 @@ app.get('/api/season-winners', (req, res) => {
                         [previousSeasonId],
                         (err, winners) => {
                             if (err) return res.status(500).json({ error: 'Database error' });
-                            res.json({ seasonId: previousSeasonId, winners });
+
+                            // Calculate sloMoPoints from rewardAmount (rewardAmount = sloMoPoints * 500)
+                            const updatedWinners = winners.map(winner => ({
+                                xUsername: winner.xUsername,
+                                rank: winner.rank,
+                                sloMoPoints: winner.rewardAmount / 500, // Reverse calculation
+                                claimed: winner.claimed
+                            }));
+
+                            res.json({ seasonId: previousSeasonId, winners: updatedWinners });
                         }
                     );
                 }
