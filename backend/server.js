@@ -1,11 +1,25 @@
-+ // ==== Hedera SDK & HashConnect integration ====
-+ const {
-+   Client,
-+   AccountId,
-+   PrivateKey,
-+   TokenMintTransaction
-+ } = require("@hashgraph/sdk");
-+
+// ==== Hedera SDK integration ====
+const { Client, AccountId, PrivateKey, TokenMintTransaction } =
+  require("@hashgraph/sdk");
+
+// load operator from env
+const OPERATOR_ID  = process.env.HEDERA_OPERATOR_ID;
+const OPERATOR_KEY = process.env.HEDERA_OPERATOR_KEY;
+
+// init Hedera client
+const hederaClient = Client.forName("testnet");
+hederaClient.setOperator(
+  AccountId.fromString(OPERATOR_ID),
+  PrivateKey.fromString(OPERATOR_KEY)
+);
+// ===============================================
+
+// now your existing requires:
+const express       = require('express');
+const cors          = require('cors');
+const axios         = require('axios');
+// …etc.
+
 + // load operator from env
 + const OPERATOR_ID  = process.env.HEDERA_OPERATOR_ID;
 + const OPERATOR_KEY = process.env.HEDERA_OPERATOR_KEY;
