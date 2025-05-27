@@ -8,7 +8,10 @@
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.0.0",
-    "hashconnect": "^0.3.0",
+    "dependencies": {"hashconnect": "^0.3.0","hashconnect": "^3.0.13",
+"@hashgraph/sdk": "^2.0.0",
+…
+}
     "express": "^4.17.1",
     "cors": "^2.8.5",
     "axios": "^0.21.1",
