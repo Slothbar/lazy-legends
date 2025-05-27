@@ -1,15 +1,26 @@
 // ==== Hedera SDK integration ====
 const { Client, AccountId, PrivateKey, TokenMintTransaction } = require("@hashgraph/sdk");
 
-// load operator from env
-const HEDERA_OPERATOR_ID  = process.env.HEDERA_OPERATOR_ID;
-const HEDERA_OPERATOR_KEY = process.env.HEDERA_OPERATOR_KEY;
+// Load operator credentials (Env vars preferred, fallback to JSON file)
+let operatorId = process.env.HEDERA_OPERATOR_ID;
+let operatorKey = process.env.HEDERA_OPERATOR_KEY;
+if (!operatorId || !operatorKey) {
+  try {
+    const creds = require('./lazy-legends-credentials.json');
+    operatorId = creds.operatorId;
+    operatorKey = creds.operatorKey;
+    console.log('Using credentials from JSON fallback');
+  } catch (e) {
+    console.error('Hedera credentials not set in env or JSON!');
+    process.exit(1);
+  }
+}
 
 // init Hedera client
 const hederaClient = Client.forName("testnet");
 hederaClient.setOperator(
-  AccountId.fromString(HEDERA_OPERATOR_ID),
-  PrivateKey.fromString(HEDERA_OPERATOR_KEY)
+  AccountId.fromString(operatorId),
+  PrivateKey.fromString(operatorKey)
 );
 // ===============================================
 
