@@ -7,6 +7,8 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@hashgraph/sdk": "^2.0.0",
+    "hashconnect": "^0.3.0",
     "express": "^4.17.1",
     "cors": "^2.8.5",
     "axios": "^0.21.1",
