@@ -1,4 +1,46 @@
+import { HashConnect }      from "hashconnect";
+import { createHederaClient } from "./hederaClient.js";
+
+const hashconnect       = new HashConnect();
+let   walletAccountData = null;
+
+async function connectHashPack() {
+  // 1) init HashConnect
+  const initData = await hashconnect.init({
+    name:        "Lazy Legends DApp",
+    description: "Chill2Earn with $SLOTH on Hedera",
+    icon:        "/icon.png",
+  });
+  // 2) connect your local HashPack
+  await hashconnect.connectToLocalWallet(initData.topic);
+  walletAccountData = hashconnect.findConnectedAccount(initData.topic);
+  document.getElementById("wallet-account")
+          .innerText = `Connected: ${walletAccountData.accountId}`;
+}
+
+document.getElementById("connect-wallet-btn")
+        .addEventListener("click", connectHashPack);
+
+// (Optionally) helper to call your back-end mint endpoint:
+async function buyLegend(itemId) {
+  if (!walletAccountData) {
+    return alert("Connect your wallet first!");
+  }
+  const resp = await fetch("/api/mint", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({
+      accountId: walletAccountData.accountId,
+      itemId
+    }),
+  });
+  const { txId } = await resp.json();
+  alert(`Mint submitted: ${txId}`);
+}
+
+// then your existing DOMContentLoaded handler continues…
 document.addEventListener('DOMContentLoaded', () => {
+
     // Load announcement on page load
     fetchAnnouncement();
 
