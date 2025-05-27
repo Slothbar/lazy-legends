@@ -20,16 +20,16 @@ const cors          = require('cors');
 const axios         = require('axios');
 // …etc.
 
-+ // load operator from env
-+ const OPERATOR_ID  = process.env.HEDERA_OPERATOR_ID;
-+ const OPERATOR_KEY = process.env.HEDERA_OPERATOR_KEY;
-+ // init Hedera client
-+ const hederaClient = Client.forName("testnet");
-+ hederaClient.setOperator(
-+   AccountId.fromString(OPERATOR_ID),
-+   PrivateKey.fromString(OPERATOR_KEY)
-+ );
-+ // ===============================================
+// load operator from env
+const OPERATOR_ID  = process.env.HEDERA_OPERATOR_ID;
+const OPERATOR_KEY = process.env.HEDERA_OPERATOR_KEY;
+// init Hedera client
+const hederaClient = Client.forName("testnet");
+hederaClient.setOperator(
+AccountId.fromString(OPERATOR_ID),
+PrivateKey.fromString(OPERATOR_KEY)
+);
+// ===============================================
 
 const express = require('express');
 const cors = require('cors');
