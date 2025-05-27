@@ -1,3 +1,22 @@
++ // ==== Hedera SDK & HashConnect integration ====
++ const {
++   Client,
++   AccountId,
++   PrivateKey,
++   TokenMintTransaction
++ } = require("@hashgraph/sdk");
++
++ // load operator from env
++ const OPERATOR_ID  = process.env.HEDERA_OPERATOR_ID;
++ const OPERATOR_KEY = process.env.HEDERA_OPERATOR_KEY;
++ // init Hedera client
++ const hederaClient = Client.forName("testnet");
++ hederaClient.setOperator(
++   AccountId.fromString(OPERATOR_ID),
++   PrivateKey.fromString(OPERATOR_KEY)
++ );
++ // ===============================================
+
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -942,6 +961,28 @@ async function trackLazyLegendsPosts() {
 }
 
 const PORT = process.env.PORT || 3000;
+  // … other routes …
+
++ // Mint endpoint for Lazy Legends NFTs
++ app.post("/api/mint", async (req, res) => {
++   try {
++     const { accountId, itemId } = req.body;
++     // Example: mint an HTS NFT metadata token
++     const mintTx = new TokenMintTransaction()
++       .setTokenId(itemId)
++       .setMetadata([Uint8Array.from(Buffer.from(`LazyLegend#${itemId}`))])
++       .freezeWith(hederaClient)
++       .sign(OPERATOR_KEY);
++
++     const mintResp = await mintTx.execute(hederaClient);
++     const receipt  = await mintResp.getReceipt(hederaClient);
++     res.json({ txId: receipt.transactionId.toString() });
++   } catch (err) {
++     console.error(err);
++     res.status(500).json({ error: err.message });
++   }
++ });
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     trackLazyLegendsPosts();
